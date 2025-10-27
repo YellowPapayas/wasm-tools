@@ -209,7 +209,13 @@ impl<'a> Resolver<'a> {
         for id in iface_order {
             let (interface, i) = &iface_id_to_ast[&id];
             self.cur_ast_index = *i;
-            self.resolve_interface(id, &interface.items, &interface.docs, &interface.attributes)?;
+            self.resolve_interface(
+                id,
+                &interface.items,
+                &interface.docs,
+                &interface.anns,
+                &interface.attributes,
+            )?;
         }
 
         for id in world_order {
@@ -314,6 +320,7 @@ impl<'a> Resolver<'a> {
             name: None,
             types: IndexMap::new(),
             docs: Docs::default(),
+            annotations: Annotations::default(),
             stability: Default::default(),
             functions: IndexMap::new(),
             package: None,
@@ -694,7 +701,8 @@ impl<'a> Resolver<'a> {
                 }
             };
 
-            let world_item = self.resolve_world_item(docs, attrs, kind)?;
+            let world_item =
+                self.resolve_world_item(docs, &ast::Annotations::default(), attrs, kind)?;
             let key = match kind {
                 // Interfaces are always named exactly as they are in the WIT.
                 ast::ExternKind::Interface(name, _) => WorldKey::Name(name.name.to_string()),
@@ -757,6 +765,7 @@ impl<'a> Resolver<'a> {
     fn resolve_world_item(
         &mut self,
         docs: &ast::Docs<'a>,
+        anns: &ast::Annotations<'a>,
         attrs: &[ast::Attribute<'a>],
         kind: &ast::ExternKind<'a>,
     ) -> Result<WorldItem> {
@@ -764,7 +773,7 @@ impl<'a> Resolver<'a> {
             ast::ExternKind::Interface(name, items) => {
                 let prev = mem::take(&mut self.type_lookup);
                 let id = self.alloc_interface(name.span);
-                self.resolve_interface(id, items, docs, attrs)?;
+                self.resolve_interface(id, items, docs, anns, attrs)?;
                 self.type_lookup = prev;
                 let stability = self.interfaces[id].stability.clone();
                 Ok(WorldItem::Interface { id, stability })
@@ -799,10 +808,12 @@ impl<'a> Resolver<'a> {
         interface_id: InterfaceId,
         fields: &[ast::InterfaceItem<'a>],
         docs: &ast::Docs<'a>,
+        anns: &ast::Annotations<'a>,
         attrs: &[ast::Attribute<'a>],
     ) -> Result<()> {
         let docs = self.docs(docs);
         self.interfaces[interface_id].docs = docs;
+        self.interfaces[interface_id].annotations = self.anns(anns);
         let stability = self.stability(attrs)?;
         self.interfaces[interface_id].stability = stability;
 
@@ -1530,6 +1541,42 @@ impl<'a> Resolver<'a> {
             Some(contents)
         };
         Docs { contents }
+    }
+
+    fn anns(&mut self, ann: &super::Annotations<'_>) -> Annotations {
+        let mut anns = vec![];
+
+        for ann in ann.docs.iter() {
+            let contents = match ann.strip_prefix("///") {
+                Some(ann) => ann,
+                None => ann,
+            };
+
+            anns.push(contents.to_string());
+        }
+
+        let contents = if anns.is_empty() {
+            None
+        } else {
+            // NB: this notably, through the use of `lines`, normalizes `\r\n`
+            // to `\n`.
+            let mut contents = String::new();
+            for ann in anns {
+                if ann.is_empty() {
+                    contents.push_str("\n");
+                } else {
+                    for line in ann.lines() {
+                        contents.push_str(line);
+                        contents.push_str("\n");
+                    }
+                }
+            }
+            while contents.ends_with("\n") {
+                contents.pop();
+            }
+            Some(contents)
+        };
+        Annotations { contents }
     }
 
     fn stability(&mut self, attrs: &[ast::Attribute<'_>]) -> Result<Stability> {

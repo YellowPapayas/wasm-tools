@@ -119,6 +119,7 @@ impl<'a> DeclList<'a> {
     fn parse_until(tokens: &mut Tokenizer<'a>, end: Option<Token>) -> Result<DeclList<'a>> {
         let mut items = Vec::new();
         let mut docs = parse_docs(tokens)?;
+        let mut anns = parse_annotations(tokens)?;
         loop {
             match end {
                 Some(end) => {
@@ -132,8 +133,9 @@ impl<'a> DeclList<'a> {
                     }
                 }
             }
-            items.push(AstItem::parse(tokens, docs)?);
+            items.push(AstItem::parse(tokens, docs, anns)?);
             docs = parse_docs(tokens)?;
+            anns = parse_annotations(tokens)?;
         }
         Ok(DeclList { items })
     }
@@ -254,11 +256,11 @@ enum AstItem<'a> {
 }
 
 impl<'a> AstItem<'a> {
-    fn parse(tokens: &mut Tokenizer<'a>, docs: Docs<'a>) -> Result<Self> {
+    fn parse(tokens: &mut Tokenizer<'a>, docs: Docs<'a>, anns: Annotations<'a>) -> Result<Self> {
         let attributes = Attribute::parse_list(tokens)?;
         match tokens.clone().next()? {
             Some((_span, Token::Interface)) => {
-                Interface::parse(tokens, docs, attributes).map(Self::Interface)
+                Interface::parse(tokens, docs, anns, attributes).map(Self::Interface)
             }
             Some((_span, Token::World)) => World::parse(tokens, docs, attributes).map(Self::World),
             Some((_span, Token::Use)) => ToplevelUse::parse(tokens, attributes).map(Self::Use),
@@ -525,6 +527,7 @@ impl<'a> ExternKind<'a> {
 
 struct Interface<'a> {
     docs: Docs<'a>,
+    anns: Annotations<'a>,
     attributes: Vec<Attribute<'a>>,
     name: Id<'a>,
     items: Vec<InterfaceItem<'a>>,
@@ -534,6 +537,7 @@ impl<'a> Interface<'a> {
     fn parse(
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
+        anns: Annotations<'a>,
         attributes: Vec<Attribute<'a>>,
     ) -> Result<Self> {
         tokens.expect(Token::Interface)?;
@@ -541,6 +545,7 @@ impl<'a> Interface<'a> {
         let items = Self::parse_items(tokens)?;
         Ok(Interface {
             docs,
+            anns,
             attributes,
             name,
             items,
@@ -723,6 +728,21 @@ pub struct Docs<'a> {
 }
 
 impl<'a> Default for Docs<'a> {
+    fn default() -> Self {
+        Self {
+            docs: Default::default(),
+            span: Span { start: 0, end: 0 },
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Annotations<'a> {
+    docs: Vec<Cow<'a, str>>,
+    span: Span,
+}
+
+impl<'a> Default for Annotations<'a> {
     fn default() -> Self {
         Self {
             docs: Default::default(),
@@ -1344,6 +1364,34 @@ fn parse_docs<'a>(tokens: &mut Tokenizer<'a>) -> Result<Docs<'a>> {
         *tokens = clone.clone();
     }
     Ok(docs)
+}
+
+fn parse_annotations<'a>(tokens: &mut Tokenizer<'a>) -> Result<Annotations<'a>> {
+    let mut annotations = Annotations::default();
+    let mut clone = tokens.clone();
+    let mut started = false;
+    while let Some((span, token)) = clone.next_raw()? {
+        match token {
+            Token::Whitespace => {}
+            Token::Annotation => {
+                let annotation = tokens.get_span(span);
+                if !started {
+                    annotations.span.start = span.start;
+                    started = true;
+                }
+                let trailing_ws = annotation
+                    .bytes()
+                    .rev()
+                    .take_while(|ch| ch.is_ascii_whitespace())
+                    .count();
+                annotations.span.end = span.end - (trailing_ws as u32);
+                annotations.docs.push(annotation.into());
+            }
+            _ => break,
+        };
+        *tokens = clone.clone();
+    }
+    Ok(annotations)
 }
 
 impl<'a> Type<'a> {

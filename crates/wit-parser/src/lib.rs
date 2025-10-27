@@ -583,6 +583,13 @@ pub struct Interface {
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
 
+    /// Annotation associated with this interface.
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
+
     /// Stability attribute for this interface.
     #[cfg_attr(
         feature = "serde",
@@ -847,6 +854,18 @@ pub struct Docs {
 }
 
 impl Docs {
+    pub fn is_empty(&self) -> bool {
+        self.contents.is_none()
+    }
+}
+
+#[derive(Clone, Default, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub struct Annotations {
+    pub contents: Option<String>,
+}
+
+impl Annotations {
     pub fn is_empty(&self) -> bool {
         self.contents.is_none()
     }

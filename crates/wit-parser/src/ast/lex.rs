@@ -32,6 +32,7 @@ pub struct Span {
 pub enum Token {
     Whitespace,
     Comment,
+    Annotation,
 
     Equals,
     Comma,
@@ -173,7 +174,9 @@ impl<'a> Tokenizer<'a> {
     pub fn next(&mut self) -> Result<Option<(Span, Token)>, Error> {
         loop {
             match self.next_raw()? {
-                Some((_, Token::Whitespace)) | Some((_, Token::Comment)) => {}
+                Some((_, Token::Whitespace))
+                | Some((_, Token::Comment))
+                | Some((_, Token::Annotation)) => {}
                 other => break Ok(other),
             }
         }
@@ -202,7 +205,13 @@ impl<'a> Tokenizer<'a> {
                             break;
                         }
                     }
-                    Comment
+                    let str_end = self.chars.chars.as_str().len();
+                    let line = &self.input[str_start..str_end];
+                    if line.starts_with("///#[") {
+                        Annotation
+                    } else {
+                        Comment
+                    }
                 // eat a block comment if it's `/*...`
                 } else if self.eatc('*') {
                     let mut depth = 1;
@@ -518,6 +527,7 @@ impl Token {
         match self {
             Whitespace => "whitespace",
             Comment => "a comment",
+            Annotation => "an annotation",
             Equals => "'='",
             Comma => "','",
             Colon => "':'",

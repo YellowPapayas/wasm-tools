@@ -895,6 +895,7 @@ impl WitPackageDecoder<'_> {
                 self.resolve.interfaces.alloc(Interface {
                     name: Some(name.interface().to_string()),
                     docs: Default::default(),
+                    annotations: Annotations::default(),
                     types: IndexMap::default(),
                     functions: IndexMap::new(),
                     package: None,
@@ -950,6 +951,7 @@ impl WitPackageDecoder<'_> {
         let mut interface = Interface {
             name: interface_name.clone(),
             docs: Default::default(),
+            annotations: Annotations::default(),
             types: IndexMap::default(),
             functions: IndexMap::new(),
             package: None,
