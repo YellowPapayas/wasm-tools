@@ -200,17 +200,23 @@ impl<'a> Tokenizer<'a> {
             '/' => {
                 // Eat a line comment if it's `//...`
                 if self.eatc('/') {
+                    let mut ch_count = 0;
                     for (_, ch) in &mut self.chars {
                         if ch == '\n' {
                             break;
                         }
+                        ch_count += 1;
                     }
-                    let str_end = self.chars.chars.as_str().len();
-                    let line = &self.input[str_start..str_end];
-                    if line.starts_with("///#[") {
-                        Annotation
-                    } else {
+                    let str_end = str_start + ch_count; //self.chars.chars.as_str().len();
+                    if str_start >= str_end {
                         Comment
+                    } else {
+                        let line = &self.input[str_start..str_end];
+                        if str_start < str_end && line.starts_with("///#[") {
+                            Annotation
+                        } else {
+                            Comment
+                        }
                     }
                 // eat a block comment if it's `/*...`
                 } else if self.eatc('*') {

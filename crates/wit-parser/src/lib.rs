@@ -610,6 +610,11 @@ pub struct TypeDef {
     pub owner: TypeOwner,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
     /// Stability attribute for this type.
     #[cfg_attr(
         feature = "serde",
@@ -882,6 +887,11 @@ pub struct Function {
     pub result: Option<Type>,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
     /// Stability attribute for this function.
     #[cfg_attr(
         feature = "serde",
@@ -1410,6 +1420,7 @@ mod test {
             kind: TypeDefKind::Future(Some(Type::U32)),
             owner: TypeOwner::None,
             docs: Docs::default(),
+            annotations: Annotations::default(),
             stability: Stability::Unknown,
         });
         let t1 = resolve.types.alloc(TypeDef {
@@ -1417,6 +1428,7 @@ mod test {
             kind: TypeDefKind::Future(Some(Type::Id(t0))),
             owner: TypeOwner::None,
             docs: Docs::default(),
+            annotations: Annotations::default(),
             stability: Stability::Unknown,
         });
         let t2 = resolve.types.alloc(TypeDef {
@@ -1424,6 +1436,7 @@ mod test {
             kind: TypeDefKind::Stream(Some(Type::U32)),
             owner: TypeOwner::None,
             docs: Docs::default(),
+            annotations: Annotations::default(),
             stability: Stability::Unknown,
         });
         let found = Function {
@@ -1432,6 +1445,7 @@ mod test {
             params: vec![("p1".into(), Type::Id(t1)), ("p2".into(), Type::U32)],
             result: Some(Type::Id(t2)),
             docs: Docs::default(),
+            annotations: Annotations::default(),
             stability: Stability::Unknown,
         }
         .find_futures_and_streams(&resolve);

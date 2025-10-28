@@ -590,6 +590,7 @@ impl<'a> Resolver<'a> {
                     }
                     let id = self.types.alloc(TypeDef {
                         docs: Docs::default(),
+                        annotations: Annotations::default(),
                         stability: stability.clone(),
                         kind: TypeDefKind::Unknown,
                         name: Some(name.name.name.to_string()),
@@ -789,6 +790,7 @@ impl<'a> Resolver<'a> {
                 let name = format!("{prefix}{}", name.name);
                 let func = self.resolve_function(
                     docs,
+                    anns,
                     attrs,
                     &name,
                     func,
@@ -848,6 +850,7 @@ impl<'a> Resolver<'a> {
                     let name = format!("{prefix}{}", f.name.name);
                     funcs.push(self.resolve_function(
                         &f.docs,
+                        &f.anns,
                         &f.attributes,
                         &name,
                         &f.func,
@@ -946,10 +949,12 @@ impl<'a> Resolver<'a> {
                 None => continue,
             };
             let docs = self.docs(&def.docs);
+            let annotations = self.anns(&def.annotations);
             let stability = self.stability(&def.attributes)?;
             let kind = self.resolve_type_def(&def.ty, &stability)?;
             let id = self.types.alloc(TypeDef {
                 docs,
+                annotations,
                 stability,
                 kind,
                 name: Some(def.name.name.to_string()),
@@ -1005,6 +1010,7 @@ impl<'a> Resolver<'a> {
             let name = name.as_.as_ref().unwrap_or(&name.name);
             let id = self.types.alloc(TypeDef {
                 docs: Docs::default(),
+                annotations: Annotations::default(),
                 stability: stability.clone(),
                 kind: TypeDefKind::Type(Type::Id(id)),
                 name: Some(name.name.to_string()),
@@ -1075,6 +1081,7 @@ impl<'a> Resolver<'a> {
         }
         self.resolve_function(
             &named_func.docs,
+            &named_func.anns,
             &named_func.attributes,
             &name,
             &named_func.func,
@@ -1085,17 +1092,20 @@ impl<'a> Resolver<'a> {
     fn resolve_function(
         &mut self,
         docs: &ast::Docs<'_>,
+        anns: &ast::Annotations<'_>,
         attrs: &[ast::Attribute<'_>],
         name: &str,
         func: &ast::Func,
         kind: FunctionKind,
     ) -> Result<Function> {
         let docs = self.docs(docs);
+        let annotations = self.anns(anns);
         let stability = self.stability(attrs)?;
         let params = self.resolve_params(&func.params, &kind, func.span)?;
         let result = self.resolve_result(&func.result, &kind, func.span)?;
         Ok(Function {
             docs,
+            annotations,
             stability,
             name: name.to_string(),
             kind,
@@ -1427,6 +1437,7 @@ impl<'a> Resolver<'a> {
                 kind,
                 name: None,
                 docs: Docs::default(),
+                annotations: Annotations::default(),
                 stability,
                 owner: TypeOwner::None,
             },
@@ -1661,6 +1672,7 @@ impl<'a> Resolver<'a> {
                 let shared = self.anon_type_def(
                     TypeDef {
                         docs: Docs::default(),
+                        annotations: Annotations::default(),
                         stability,
                         kind,
                         name: None,

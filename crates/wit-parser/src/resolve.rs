@@ -17,10 +17,10 @@ use crate::ast::{ParsedUsePath, parse_use_path};
 #[cfg(feature = "serde")]
 use crate::serde_::{serialize_arena, serialize_id_map};
 use crate::{
-    AstItem, Docs, Error, Function, FunctionKind, Handle, IncludeName, Interface, InterfaceId,
-    InterfaceSpan, LiftLowerAbi, ManglingAndAbi, PackageName, PackageNotFoundError, SourceMap,
-    Stability, Type, TypeDef, TypeDefKind, TypeId, TypeIdVisitor, TypeOwner, UnresolvedPackage,
-    UnresolvedPackageGroup, World, WorldId, WorldItem, WorldKey, WorldSpan,
+    Annotations, AstItem, Docs, Error, Function, FunctionKind, Handle, IncludeName, Interface,
+    InterfaceId, InterfaceSpan, LiftLowerAbi, ManglingAndAbi, PackageName, PackageNotFoundError,
+    SourceMap, Stability, Type, TypeDef, TypeDefKind, TypeId, TypeIdVisitor, TypeOwner,
+    UnresolvedPackage, UnresolvedPackageGroup, World, WorldId, WorldItem, WorldKey, WorldSpan,
 };
 
 pub use clone::CloneMaps;
@@ -2888,6 +2888,7 @@ impl Remap {
                     owner: TypeOwner::None,
                     kind: TypeDefKind::Handle(Handle::Own(id)),
                     docs: _,
+                    annotations: _,
                     stability: _,
                 } => *self.own_handles.entry(id).or_insert(new_id),
 
@@ -3369,6 +3370,7 @@ impl Remap {
                     owner: TypeOwner::None,
                     kind: TypeDefKind::Handle(Handle::Own(*id)),
                     docs: Default::default(),
+                    annotations: Annotations::default(),
                     stability: Default::default(),
                 })
             });

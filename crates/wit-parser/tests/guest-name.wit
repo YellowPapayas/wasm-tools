@@ -1,0 +1,56 @@
+package foo:bar;
+
+interface guest {
+  type guest = u32;
+  ///#[getter]
+  x: func() -> guest;
+}
+
+///#[derive(Serialize, Deserialize)]
+interface other-guest {
+  guest: func();
+}
+
+world another-guest {
+  import guest;
+  export guest;
+  import other-guest;
+  export other-guest;
+
+  export i1;
+  export i2;
+  export i3;
+  export i4;
+}
+
+interface i1 {
+  /// regular comment
+  ///#[annotation]
+  enum guest {
+    a, b, c,
+  }
+  x: func() -> guest;
+}
+
+interface i2 {
+  use i1.{guest};
+  x: func() -> guest;
+}
+
+///#[path = "main.rs"]
+interface i3 {
+  ///#[capitalize name]
+  record guest {
+    x: u32,
+  }
+  x: func() -> guest;
+}
+
+interface i4 {
+  ///#[annotation first]
+  /// comment after
+  variant guest {
+    x(u32),
+  }
+  x: func() -> guest;
+}

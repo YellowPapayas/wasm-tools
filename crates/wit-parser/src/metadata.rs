@@ -664,6 +664,11 @@ struct TypeMetadata {
     docs: Option<String>,
     #[cfg_attr(
         feature = "serde",
+        serde(default, skip_serializing_if = "Option::is_none")
+    )]
+    annotations: Option<String>,
+    #[cfg_attr(
+        feature = "serde",
         serde(default, skip_serializing_if = "Stability::is_unknown")
     )]
     stability: Stability,
@@ -706,6 +711,7 @@ impl TypeMetadata {
 
         Self {
             docs: ty.docs.contents.clone(),
+            annotations: ty.annotations.contents.clone(),
             stability: ty.stability.clone(),
             items,
         }
@@ -734,6 +740,9 @@ impl TypeMetadata {
         }
         if let Some(docs) = &self.docs {
             ty.docs.contents = Some(docs.to_string());
+        }
+        if let Some(anns) = &self.annotations {
+            ty.annotations.contents = Some(anns.to_string());
         }
         ty.stability = self.stability.clone();
         Ok(())

@@ -12,7 +12,7 @@ use wit_parser::*;
 
 #[test]
 fn main() -> Result<(), Error> {
-    let unresolved = UnresolvedPackageGroup::parse_file(Path::new("tests/strings.wit"))?;
+    let unresolved = UnresolvedPackageGroup::parse_file(Path::new("tests/guest-name.wit"))?;
 
     let mut resolve = Resolve::default();
     let package_id = resolve.push_group(unresolved)?;
@@ -29,6 +29,7 @@ fn main() -> Result<(), Error> {
         for (type_name, type_id) in &interface.types {
             let mut type_kind = &TypeDefKind::Unknown;
             if let Some(type_def) = resolve.types.get(*type_id) {
+                print!("{:?}, {:?}", type_def.annotations, type_def.docs);
                 type_kind = &type_def.kind;
             }
             println!("      Type: {}, {:?}", type_name, type_kind);
@@ -36,6 +37,7 @@ fn main() -> Result<(), Error> {
 
         for (func_name, func) in &interface.functions {
             println!("      Function: {}", func_name);
+            println!("      Annotations: {:?}", func.annotations);
 
             for (param_name, param_type) in &func.params {
                 println!("          Param: {}, {:?}", param_name, param_type);

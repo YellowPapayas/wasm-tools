@@ -1050,6 +1050,7 @@ impl WitPackageDecoder<'_> {
             name: Some(name.to_string()),
             kind,
             docs: Default::default(),
+            annotations: Default::default(),
             stability: Default::default(),
             owner,
         });
@@ -1198,6 +1199,7 @@ impl WitPackageDecoder<'_> {
         };
         Ok(Function {
             docs: Default::default(),
+            annotations: Default::default(),
             stability: Default::default(),
             kind: match name.kind() {
                 ComponentNameKind::Label(_) => FunctionKind::Freestanding,
@@ -1276,6 +1278,7 @@ impl WitPackageDecoder<'_> {
         let ty = self.resolve.types.alloc(TypeDef {
             name: None,
             docs: Default::default(),
+            annotations: Default::default(),
             stability: Default::default(),
             owner: TypeOwner::None,
             kind,
