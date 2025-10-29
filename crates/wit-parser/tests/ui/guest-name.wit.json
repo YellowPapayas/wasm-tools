@@ -1,0 +1,280 @@
+{
+  "worlds": [
+    {
+      "name": "another-guest",
+      "imports": {
+        "interface-0": {
+          "interface": {
+            "id": 0
+          }
+        },
+        "interface-1": {
+          "interface": {
+            "id": 1
+          }
+        }
+      },
+      "exports": {
+        "interface-0": {
+          "interface": {
+            "id": 0
+          }
+        },
+        "interface-1": {
+          "interface": {
+            "id": 1
+          }
+        },
+        "interface-2": {
+          "interface": {
+            "id": 2
+          }
+        },
+        "interface-3": {
+          "interface": {
+            "id": 3
+          }
+        },
+        "interface-4": {
+          "interface": {
+            "id": 4
+          }
+        },
+        "interface-5": {
+          "interface": {
+            "id": 5
+          }
+        }
+      },
+      "package": 0
+    }
+  ],
+  "interfaces": [
+    {
+      "name": "guest",
+      "types": {
+        "guest": 0
+      },
+      "functions": {
+        "x": {
+          "name": "x",
+          "kind": "freestanding",
+          "params": [],
+          "result": 0,
+          "annotations": {
+            "annotation_types": [
+              {
+                "Generic": "getter"
+              }
+            ]
+          }
+        }
+      },
+      "package": 0
+    },
+    {
+      "name": "other-guest",
+      "types": {},
+      "functions": {
+        "guest": {
+          "name": "guest",
+          "kind": "freestanding",
+          "params": []
+        }
+      },
+      "annotations": {
+        "annotation_types": [
+          {
+            "Attribute": [
+              "serde",
+              "Serialize"
+            ]
+          },
+          {
+            "Attribute": [
+              "serde",
+              "Deserialize"
+            ]
+          }
+        ]
+      },
+      "package": 0
+    },
+    {
+      "name": "i1",
+      "types": {
+        "guest": 1
+      },
+      "functions": {
+        "x": {
+          "name": "x",
+          "kind": "freestanding",
+          "params": [],
+          "result": 1
+        }
+      },
+      "package": 0
+    },
+    {
+      "name": "i2",
+      "types": {
+        "guest": 2
+      },
+      "functions": {
+        "x": {
+          "name": "x",
+          "kind": "freestanding",
+          "params": [],
+          "result": 2
+        }
+      },
+      "package": 0
+    },
+    {
+      "name": "i3",
+      "types": {
+        "guest": 3
+      },
+      "functions": {
+        "x": {
+          "name": "x",
+          "kind": "freestanding",
+          "params": [],
+          "result": 3
+        }
+      },
+      "annotations": {
+        "annotation_types": [
+          {
+            "Attribute": [
+              "path",
+              "main"
+            ]
+          }
+        ]
+      },
+      "package": 0
+    },
+    {
+      "name": "i4",
+      "types": {
+        "guest": 4
+      },
+      "functions": {
+        "x": {
+          "name": "x",
+          "kind": "freestanding",
+          "params": [],
+          "result": 4
+        }
+      },
+      "package": 0
+    }
+  ],
+  "types": [
+    {
+      "name": "guest",
+      "kind": {
+        "type": "u32"
+      },
+      "owner": {
+        "interface": 0
+      }
+    },
+    {
+      "name": "guest",
+      "kind": {
+        "enum": {
+          "cases": [
+            {
+              "name": "a"
+            },
+            {
+              "name": "b"
+            },
+            {
+              "name": "c"
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 2
+      },
+      "docs": {
+        "contents": "regular comment"
+      },
+      "annotations": {
+        "annotation_types": [
+          {
+            "Generic": "annotation"
+          }
+        ]
+      }
+    },
+    {
+      "name": "guest",
+      "kind": {
+        "type": 1
+      },
+      "owner": {
+        "interface": 3
+      }
+    },
+    {
+      "name": "guest",
+      "kind": {
+        "record": {
+          "fields": [
+            {
+              "name": "x",
+              "type": "u32"
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 4
+      },
+      "annotations": {
+        "annotation_types": [
+          {
+            "Generic": "capitalize"
+          }
+        ]
+      }
+    },
+    {
+      "name": "guest",
+      "kind": {
+        "variant": {
+          "cases": [
+            {
+              "name": "x",
+              "type": "u32"
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 5
+      }
+    }
+  ],
+  "packages": [
+    {
+      "name": "foo:bar",
+      "interfaces": {
+        "guest": 0,
+        "other-guest": 1,
+        "i1": 2,
+        "i2": 3,
+        "i3": 4,
+        "i4": 5
+      },
+      "worlds": {
+        "another-guest": 0
+      }
+    }
+  ]
+}

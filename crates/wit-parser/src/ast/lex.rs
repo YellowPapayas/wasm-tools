@@ -174,9 +174,7 @@ impl<'a> Tokenizer<'a> {
     pub fn next(&mut self) -> Result<Option<(Span, Token)>, Error> {
         loop {
             match self.next_raw()? {
-                Some((_, Token::Whitespace))
-                | Some((_, Token::Comment))
-                | Some((_, Token::Annotation)) => {}
+                Some((_, Token::Whitespace)) | Some((_, Token::Comment)) => {}
                 other => break Ok(other),
             }
         }
@@ -200,23 +198,15 @@ impl<'a> Tokenizer<'a> {
             '/' => {
                 // Eat a line comment if it's `//...`
                 if self.eatc('/') {
-                    let mut ch_count = 0;
-                    for (_, ch) in &mut self.chars {
-                        if ch == '\n' {
-                            break;
-                        }
-                        ch_count += 1;
-                    }
-                    let str_end = str_start + ch_count; //self.chars.chars.as_str().len();
-                    if str_start >= str_end {
-                        Comment
+                    if self.eatc('/') {
+                        Annotation
                     } else {
-                        let line = &self.input[str_start..str_end];
-                        if str_start < str_end && line.starts_with("///") {
-                            Annotation
-                        } else {
-                            Comment
+                        for (_, ch) in &mut self.chars {
+                            if ch == '\n' {
+                                break;
+                            }
                         }
+                        Comment
                     }
                 // eat a block comment if it's `/*...`
                 } else if self.eatc('*') {
@@ -354,7 +344,6 @@ impl<'a> Tokenizer<'a> {
         };
 
         let end = self.span_offset + u32::try_from(end).unwrap();
-        //println!("{:?} {:?}", token, self.get_span(Span { start, end }));
         Ok(Some((Span { start, end }, token)))
     }
 

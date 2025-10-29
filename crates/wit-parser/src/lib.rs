@@ -874,7 +874,7 @@ pub struct Annotations {
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub enum AnnotationType {
     Generic(String),
-    Attribute(Stability),
+    Attribute(String, String),
 }
 
 impl Annotations {

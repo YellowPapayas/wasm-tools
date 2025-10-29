@@ -53,7 +53,7 @@ interface types {
   type t51a = list<u32, 4>;
   type t51b = list<list<u32, 4>, 2>;
 
-  /// type order doesn't matter
+  // type order doesn't matter
   type foo = bar;
   type bar = u32;
 }

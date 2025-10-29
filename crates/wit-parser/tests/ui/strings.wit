@@ -1,15 +1,15 @@
 package foo:foo;
 
-/// regular comment
-///#[derive(Serialize, Deserialize)]
-///@unstable
+///unstable
+///(serde=Serialize,serde=Deserialize)
 interface strings {
   a: func(x: string);
+  /// (six = seven, max = gordon, sarayu = vijayanagaram)
   b: func() -> string;
   c: func(a: string, b: string) -> string;
 }
 
-///@unstable(feature = foo)
+///unstable
 world the-world {
   import strings;
   export strings;

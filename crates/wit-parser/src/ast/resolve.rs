@@ -1559,20 +1559,15 @@ impl<'a> Resolver<'a> {
 
         for ann_type in &ann.annotation_types {
             match ann_type {
-                ast::AnnotationType::Attribute(attribute) => {
-                    match self.stability(std::slice::from_ref(attribute)) {
-                        Ok(stab) => anns.push(AnnotationType::Attribute(stab)),
-                        Err(_) => (),
-                    }
+                ast::AnnotationType::Attribute { key, value, .. } => {
+                    anns.push(AnnotationType::Attribute(
+                        key.to_string(),
+                        value.to_string(),
+                    ));
                 }
                 ast::AnnotationType::Generic { docs, .. } => {
                     for ann in docs.iter() {
-                        let contents = match ann.strip_prefix("///") {
-                            Some(ann) => ann,
-                            None => ann,
-                        };
-
-                        anns.push(AnnotationType::Generic(contents.to_string()));
+                        anns.push(AnnotationType::Generic(ann.to_string()));
                     }
                 }
             }

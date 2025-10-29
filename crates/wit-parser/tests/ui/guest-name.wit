@@ -2,11 +2,11 @@ package foo:bar;
 
 interface guest {
   type guest = u32;
-  ///#[getter]
+  ///getter
   x: func() -> guest;
 }
 
-///#[derive(Serialize, Deserialize)]
+///(serde=Serialize, serde = Deserialize)
 interface other-guest {
   guest: func();
 }
@@ -24,8 +24,8 @@ world another-guest {
 }
 
 interface i1 {
-  /// regular comment
-  ///#[annotation]
+  // regular comment
+  ///annotation
   enum guest {
     a, b, c,
   }
@@ -37,9 +37,9 @@ interface i2 {
   x: func() -> guest;
 }
 
-///#[path = "main.rs"]
+///(path=main)
 interface i3 {
-  ///#[capitalize name]
+  ///capitalize
   record guest {
     x: u32,
   }
@@ -47,8 +47,6 @@ interface i3 {
 }
 
 interface i4 {
-  ///#[annotation first]
-  /// comment after
   variant guest {
     x(u32),
   }

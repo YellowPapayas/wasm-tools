@@ -745,10 +745,14 @@ pub struct Annotations<'a> {
 
 enum AnnotationType<'a> {
     Generic {
-        _span: Span,
+        span: Span,
         docs: Vec<Cow<'a, str>>,
     },
-    Attribute(Attribute<'a>),
+    Attribute {
+        span: Span,
+        key: String,
+        value: String,
+    },
 }
 
 impl<'a> Default for Annotations<'a> {
@@ -762,7 +766,7 @@ impl<'a> Default for Annotations<'a> {
 impl<'a> Default for AnnotationType<'a> {
     fn default() -> Self {
         Self::Generic {
-            _span: Span { start: 0, end: 0 },
+            span: Span { start: 0, end: 0 },
             docs: Default::default(),
         }
     }
@@ -1278,6 +1282,16 @@ fn parse_id<'a>(tokens: &mut Tokenizer<'a>) -> Result<Id<'a>> {
     }
 }
 
+fn parse_word<'a>(tokens: &mut Tokenizer<'a>) -> Result<Id<'a>> {
+    match tokens.next()? {
+        Some((span, Token::Id)) => Ok(Id {
+            name: tokens.get_span(span),
+            span,
+        }),
+        other => Err(err_expected(tokens, "an identifier or string", other).into()),
+    }
+}
+
 fn parse_opt_version(tokens: &mut Tokenizer<'_>) -> Result<Option<(Span, Version)>> {
     if tokens.eat(Token::At)? {
         parse_version(tokens).map(Some)
@@ -1410,35 +1424,44 @@ fn parse_annotations<'a>(tokens: &mut Tokenizer<'a>) -> Result<Annotations<'a>> 
     while let Some((span, token)) = clone.next_raw()? {
         match token {
             Token::Whitespace => {}
-            Token::Annotation => {
-                let annotation = tokens.get_span(span);
-                let beginning_trail = annotation
-                    .bytes()
-                    .take_while(|ch| ch.is_ascii_whitespace() || *ch == b'/')
-                    .count();
-                let (_, mut annotation_string) = annotation.split_at(beginning_trail);
-                annotation_string = annotation_string.trim();
-                if annotation_string.contains("@unstable") {
-                    annotations.annotation_types.push(AnnotationType::Attribute(
-                        Attribute::Unstable {
-                            span,
-                            feature: Id { name: "", span },
-                        },
-                    ))
-                } else {
+            Token::Annotation => match parse_id(&mut clone) {
+                Ok(id) => {
                     let mut generic_annotation = AnnotationType::Generic {
-                        _span: span,
+                        span: span,
                         docs: Default::default(),
                     };
                     match generic_annotation {
                         AnnotationType::Generic { ref mut docs, .. } => {
-                            docs.push(annotation_string.into());
+                            docs.push(id.name.into());
                         }
                         _ => (),
                     }
                     annotations.annotation_types.push(generic_annotation);
                 }
-            }
+                Err(_) => {
+                    let pair_list =
+                        parse_list_trailer(&mut clone, Token::RightParen, |_docs, clone| {
+                            let key = parse_word(clone)?;
+                            clone.expect(Token::Equals)?;
+                            let value = parse_word(clone)?;
+                            Ok((key, value))
+                        });
+                    match pair_list {
+                        Ok(pairs) => {
+                            for tuple in pairs {
+                                annotations
+                                    .annotation_types
+                                    .push(AnnotationType::Attribute {
+                                        span,
+                                        key: tuple.0.name.to_string(),
+                                        value: tuple.1.name.to_string(),
+                                    })
+                            }
+                        }
+                        Err(_) => (),
+                    }
+                }
+            },
             _ => break,
         };
         *tokens = clone.clone();
