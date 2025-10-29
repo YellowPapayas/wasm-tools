@@ -1348,6 +1348,10 @@ pub enum Stability {
         )]
         deprecated: Option<Version>,
     },
+    
+    Annotated {
+        annotations: Vec<(String, String)>
+    }
 }
 
 impl Stability {

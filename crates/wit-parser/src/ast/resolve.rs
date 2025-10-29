@@ -1575,6 +1575,13 @@ impl<'a> Resolver<'a> {
                 feature: feature.name.to_string(),
                 deprecated: Some(version.clone()),
             }),
+            [ast::Attribute::Annotation { features, .. }, ..] => Ok(Stability::Annotated {
+                annotations: features
+                    .iter()
+                    .map(|(name, value)| (name.name.to_string(), value.name.to_string()))
+                    .collect(),
+            }),
+
             [ast::Attribute::Deprecated { span, .. }] => {
                 bail!(Error::new(
                     *span,

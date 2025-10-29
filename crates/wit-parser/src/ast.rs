@@ -1585,9 +1585,22 @@ fn err_expected(
 }
 
 enum Attribute<'a> {
-    Since { span: Span, version: Version },
-    Unstable { span: Span, feature: Id<'a> },
-    Deprecated { span: Span, version: Version },
+    Since {
+        span: Span,
+        version: Version,
+    },
+    Unstable {
+        span: Span,
+        feature: Id<'a>,
+    },
+    Deprecated {
+        span: Span,
+        version: Version,
+    },
+    Annotation {
+        span: Span,
+        features: Vec<(Id<'a>, Id<'a>)>,
+    }, // key-value store of annotations
 }
 
 impl<'a> Attribute<'a> {
@@ -1629,6 +1642,39 @@ impl<'a> Attribute<'a> {
                         version,
                     }
                 }
+                "annotation" => {
+                    let pairs = parse_list(
+                        tokens,
+                        Token::LeftParen,
+                        Token::RightParen,
+                        |_docs, tokens| {
+                            println!("TEST");
+                            let key = parse_id(tokens)?;
+                            println!("Key: {:?}", key);
+                            tokens.expect(Token::Equals)?;
+                            let value = parse_id(tokens)?;
+                            println!("Key: {:?}", key);
+                            Ok((key, value))
+                        },
+                    )?;
+
+                    // tokens.expect(Token::LeftParen)?;
+
+                    // loop {
+                    //     let (span, next_token) = tokens.next()?;
+
+                    //     next_token.1.
+                    // }
+
+                    // eat_id(tokens, "feature")?;
+                    // tokens.expect(Token::Equals)?;
+                    // let feature = parse_id(tokens)?;
+                    // tokens.expect(Token::RightParen)?;
+                    Attribute::Annotation {
+                        span: id.span,
+                        features: pairs,
+                    }
+                }
                 other => {
                     bail!(Error::new(id.span, format!("unknown attribute `{other}`"),))
                 }
@@ -1642,7 +1688,8 @@ impl<'a> Attribute<'a> {
         match self {
             Attribute::Since { span, .. }
             | Attribute::Unstable { span, .. }
-            | Attribute::Deprecated { span, .. } => *span,
+            | Attribute::Deprecated { span, .. }
+            | Attribute::Annotation { span, .. } => *span,
         }
     }
 }

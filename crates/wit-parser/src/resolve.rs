@@ -1979,6 +1979,9 @@ package {name} is defined in two different locations:\n\
             Stability::Unstable { feature, .. } => {
                 self.features.contains(feature) || self.all_features
             }
+            Stability::Annotated { .. } => {
+                true
+            }
         })
     }
 

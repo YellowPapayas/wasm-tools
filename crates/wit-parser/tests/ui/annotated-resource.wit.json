@@ -1,44 +1,61 @@
 {
-  "worlds": [],
-  "interfaces": [
+  "worlds": [
     {
-      "name": "error",
-      "types": {
-        "error": 0
+      "name": "bar",
+      "imports": {},
+      "exports": {
+        "interface-0": {
+          "interface": {
+            "id": 0
+          }
+        }
       },
-      "functions": {},
       "package": 0
-    },
+    }
+  ],
+  "interfaces": [
     {
       "name": "foo",
       "types": {},
-      "functions": {},
-      "package": 1
-    }
-  ],
-  "types": [
-    {
-      "name": "error",
-      "kind": "resource",
-      "owner": {
-        "interface": 0
-      }
-    }
-  ],
-  "packages": [
-    {
-      "name": "wasi:io@0.1.0",
-      "interfaces": {
-        "error": 0
+      "functions": {
+        "x": {
+          "name": "x",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "y",
+              "type": "string"
+            }
+          ],
+          "stability": {
+            "annotated": {
+              "annotations": [
+                [
+                  "serde",
+                  "serialize"
+                ],
+                [
+                  "serde",
+                  "deserialize"
+                ]
+              ]
+            }
+          }
+        }
       },
-      "worlds": {}
-    },
+      "package": 0
+    }
+  ],
+  "types": [],
+  "packages": [
     {
       "name": "a:b@0.1.0",
       "interfaces": {
-        "foo": 1
+        "foo": 0
       },
-      "worlds": {}
+      "worlds": {
+        "bar": 0
+      }
     }
   ]
 }

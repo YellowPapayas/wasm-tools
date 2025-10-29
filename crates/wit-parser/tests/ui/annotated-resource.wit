@@ -2,13 +2,13 @@ package a:b@0.1.0;
 
 interface foo {
 
-  x: func(y: borrow<error>);
+  @annotation(serde = serialize, serde = deserialize)
+  x: func(y: string);
 }
 
-package wasi:io@0.1.0 {
-  interface error {
-    resource error;
-  }
+world bar {
+  export foo;
+
 }
 
 
