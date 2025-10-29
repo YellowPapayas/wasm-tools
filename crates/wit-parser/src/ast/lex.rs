@@ -97,6 +97,7 @@ pub enum Token {
     ExplicitId,
 
     Integer,
+    String,
 
     Include,
     With,
@@ -168,6 +169,73 @@ impl<'a> Tokenizer<'a> {
         let id_part = token.strip_prefix('%').unwrap();
         validate_id(span.start, id_part)?;
         Ok(id_part)
+    }
+
+    pub fn parse_string(&self, span: Span) -> Result<std::string::String> {
+        let token = self.get_span(span);
+        // Remove surrounding quotes
+        let content = token.strip_prefix('"')
+            .and_then(|s| s.strip_suffix('"'))
+            .ok_or_else(|| anyhow::anyhow!("invalid string literal"))?;
+
+        // If no escapes, return the string as-is
+        if !content.contains('\\') {
+            return Ok(content.to_string());
+        }
+
+        // Parse escapes
+        let mut result = std::string::String::new();
+        let mut chars = content.chars();
+        while let Some(ch) = chars.next() {
+            if ch == '\\' {
+                match chars.next() {
+                    Some('"') => result.push('"'),
+                    Some('\'') => result.push('\''),
+                    Some('t') => result.push('\t'),
+                    Some('n') => result.push('\n'),
+                    Some('r') => result.push('\r'),
+                    Some('\\') => result.push('\\'),
+                    Some('u') => {
+                        // Unicode escape \u{HHHHHH}
+                        if chars.next() != Some('{') {
+                            bail!("invalid unicode escape at {}", span.start);
+                        }
+                        let mut hex = std::string::String::new();
+                        loop {
+                            match chars.next() {
+                                Some('}') => break,
+                                Some(ch) if ch.is_ascii_hexdigit() => hex.push(ch),
+                                _ => bail!("invalid unicode escape at {}", span.start),
+                            }
+                        }
+                        let code = u32::from_str_radix(&hex, 16)?;
+                        let unicode_char = char::from_u32(code)
+                            .ok_or_else(|| anyhow::anyhow!("invalid unicode value {}", code))?;
+                        result.push(unicode_char);
+                    },
+                    Some('x') => {
+                        // Hex escape \xHH
+                        let hex1 = chars.next()
+                            .ok_or_else(|| anyhow::anyhow!("incomplete hex escape at {}", span.start))?;
+                        let hex2 = chars.next()
+                            .ok_or_else(|| anyhow::anyhow!("incomplete hex escape at {}", span.start))?;
+                        if !hex1.is_ascii_hexdigit() || !hex2.is_ascii_hexdigit() {
+                            bail!("invalid hex escape at {}", span.start);
+                        }
+                        let mut hex = std::string::String::new();
+                        hex.push(hex1);
+                        hex.push(hex2);
+                        let byte = u8::from_str_radix(&hex, 16)?;
+                        result.push(byte as char);
+                    },
+                    Some(ch) => bail!("invalid escape sequence \\{} at {}", ch, span.start),
+                    None => bail!("incomplete escape sequence at {}", span.start),
+                }
+            } else {
+                result.push(ch);
+            }
+        }
+        Ok(result)
     }
 
     pub fn next(&mut self) -> Result<Option<(Span, Token)>, Error> {
@@ -329,6 +397,64 @@ impl<'a> Tokenizer<'a> {
                 }
 
                 Integer
+            }
+
+            '"' => {
+                // Parse a string literal with escape sequences
+                loop {
+                    match self.chars.next() {
+                        Some((_, '"')) => break,
+                        Some((_, '\\')) => {
+                            // Handle escape sequences
+                            match self.chars.next() {
+                                Some((_, '"')) | Some((_, '\'')) | Some((_, 't'))
+                                | Some((_, 'n')) | Some((_, 'r')) | Some((_, '\\')) => {},
+                                Some((_, 'u')) => {
+                                    // Unicode escape: \u{...}
+                                    if !self.eatc('{') {
+                                        return Err(Error::InvalidEscape(start, 'u'));
+                                    }
+                                    // Consume hex digits
+                                    let mut has_digits = false;
+                                    let mut iter = self.chars.clone();
+                                    while let Some((_, ch)) = iter.next() {
+                                        if ch == '}' {
+                                            self.chars = iter;
+                                            has_digits = true;
+                                            break;
+                                        }
+                                        if !ch.is_ascii_hexdigit() {
+                                            return Err(Error::InvalidEscape(start, ch));
+                                        }
+                                        self.chars = iter.clone();
+                                    }
+                                    if !has_digits {
+                                        return Err(Error::InvalidEscape(start, 'u'));
+                                    }
+                                },
+                                Some((_, 'x')) => {
+                                    // Hex escape: \xHH - consume two hex digits
+                                    match self.chars.next() {
+                                        Some((_, ch1)) if ch1.is_ascii_hexdigit() => {
+                                            match self.chars.next() {
+                                                Some((_, ch2)) if ch2.is_ascii_hexdigit() => {},
+                                                Some((_, ch2)) => return Err(Error::InvalidEscape(start, ch2)),
+                                                None => return Err(Error::UnterminatedComment(start)),
+                                            }
+                                        },
+                                        Some((_, ch)) => return Err(Error::InvalidEscape(start, ch)),
+                                        None => return Err(Error::UnterminatedComment(start)),
+                                    }
+                                },
+                                Some((_, ch)) => return Err(Error::InvalidEscape(start, ch)),
+                                None => return Err(Error::UnterminatedComment(start)),
+                            }
+                        },
+                        Some(_) => {},
+                        None => return Err(Error::UnterminatedComment(start)),
+                    }
+                }
+                Token::String
             }
 
             ch => return Err(Error::Unexpected(start, ch)),
@@ -578,6 +704,7 @@ impl Token {
             Package => "keyword `package`",
             Constructor => "keyword `constructor`",
             Integer => "an integer",
+            String => "a string literal",
             Include => "keyword `include`",
             With => "keyword `with`",
             Async => "keyword `async`",
@@ -745,4 +872,90 @@ fn test_tokenizer() {
     assert!(collect("\u{b}").is_err(), "control code");
     assert!(collect("\u{c}").is_err(), "control code");
     assert!(collect("\u{85}").is_err(), "control code");
+}
+
+#[test]
+fn test_string_lexing() {
+    fn collect(s: &str) -> Result<Vec<Token>> {
+        let mut t = Tokenizer::new(s, 0, None)?;
+        let mut tokens = Vec::new();
+        while let Some(token) = t.next()? {
+            tokens.push(token.1);
+        }
+        Ok(tokens)
+    }
+
+    // Basic string literals
+    assert_eq!(collect(r#""""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello world""#).unwrap(), vec![Token::String]);
+
+    // Strings with escape sequences
+    assert_eq!(collect(r#""hello\nworld""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello\tworld""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello\rworld""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello\\world""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello\"world""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello\'world""#).unwrap(), vec![Token::String]);
+
+    // Unicode escapes
+    assert_eq!(collect(r#""hello\u{1F600}world""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""\u{41}""#).unwrap(), vec![Token::String]); // 'A'
+    assert_eq!(collect(r#""\u{1234}""#).unwrap(), vec![Token::String]);
+
+    // Hex escapes
+    assert_eq!(collect(r#""\x41""#).unwrap(), vec![Token::String]); // 'A'
+    assert_eq!(collect(r#""\x20""#).unwrap(), vec![Token::String]); // space
+
+    // Multiple strings
+    assert_eq!(
+        collect(r#""hello" "world""#).unwrap(),
+        vec![Token::String, Token::String]
+    );
+
+    // Strings mixed with other tokens
+    assert_eq!(
+        collect(r#"foo "bar" baz"#).unwrap(),
+        vec![Token::Id, Token::String, Token::Id]
+    );
+
+    // Invalid strings should error
+    assert!(collect(r#""unterminated"#).is_err());
+    assert!(collect(r#""\q""#).is_err()); // Invalid escape
+}
+
+#[test]
+fn test_parse_string() {
+    fn parse_string(s: &str) -> Result<std::string::String> {
+        let mut t = Tokenizer::new(s, 0, None)?;
+        match t.next()? {
+            Some((span, Token::String)) => t.parse_string(span),
+            _ => bail!("expected string token"),
+        }
+    }
+
+    // Basic strings
+    assert_eq!(parse_string(r#""""#).unwrap(), "");
+    assert_eq!(parse_string(r#""hello""#).unwrap(), "hello");
+    assert_eq!(parse_string(r#""hello world""#).unwrap(), "hello world");
+
+    // Escape sequences
+    assert_eq!(parse_string(r#""hello\nworld""#).unwrap(), "hello\nworld");
+    assert_eq!(parse_string(r#""hello\tworld""#).unwrap(), "hello\tworld");
+    assert_eq!(parse_string(r#""hello\rworld""#).unwrap(), "hello\rworld");
+    assert_eq!(parse_string(r#""hello\\world""#).unwrap(), "hello\\world");
+    assert_eq!(parse_string(r#""hello\"world""#).unwrap(), "hello\"world");
+    assert_eq!(parse_string(r#""hello\'world""#).unwrap(), "hello'world");
+
+    // Unicode escapes
+    assert_eq!(parse_string(r#""\u{41}""#).unwrap(), "A");
+    assert_eq!(parse_string(r#""\u{1F600}""#).unwrap(), "😀");
+    assert_eq!(parse_string(r#""hello\u{20}world""#).unwrap(), "hello world");
+
+    // Hex escapes
+    assert_eq!(parse_string(r#""\x41""#).unwrap(), "A");
+    assert_eq!(parse_string(r#""\x20""#).unwrap(), " ");
+
+    // Mixed escapes
+    assert_eq!(parse_string(r#""a\nb\tc\\d\"e""#).unwrap(), "a\nb\tc\\d\"e");
 }
