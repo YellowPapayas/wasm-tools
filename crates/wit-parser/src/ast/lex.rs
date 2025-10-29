@@ -212,7 +212,7 @@ impl<'a> Tokenizer<'a> {
                         Comment
                     } else {
                         let line = &self.input[str_start..str_end];
-                        if str_start < str_end && line.starts_with("///#[") {
+                        if str_start < str_end && line.starts_with("///") {
                             Annotation
                         } else {
                             Comment
@@ -354,6 +354,7 @@ impl<'a> Tokenizer<'a> {
         };
 
         let end = self.span_offset + u32::try_from(end).unwrap();
+        //println!("{:?} {:?}", token, self.get_span(Span { start, end }));
         Ok(Some((Span { start, end }, token)))
     }
 

@@ -864,15 +864,28 @@ impl Docs {
     }
 }
 
-#[derive(Clone, Default, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Default, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Annotations {
-    pub contents: Option<String>,
+    pub annotation_types: Vec<AnnotationType>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub enum AnnotationType {
+    Generic(String),
+    Attribute(Stability),
 }
 
 impl Annotations {
     pub fn is_empty(&self) -> bool {
-        self.contents.is_none()
+        self.annotation_types.is_empty()
+    }
+}
+
+impl Default for AnnotationType {
+    fn default() -> Self {
+        Self::Generic("".to_string())
     }
 }
 

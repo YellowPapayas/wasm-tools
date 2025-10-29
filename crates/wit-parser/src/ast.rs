@@ -739,17 +739,31 @@ impl<'a> Default for Docs<'a> {
     }
 }
 
-#[derive(Debug, Clone)]
 pub struct Annotations<'a> {
-    docs: Vec<Cow<'a, str>>,
-    span: Span,
+    annotation_types: Vec<AnnotationType<'a>>,
+}
+
+enum AnnotationType<'a> {
+    Generic {
+        _span: Span,
+        docs: Vec<Cow<'a, str>>,
+    },
+    Attribute(Attribute<'a>),
 }
 
 impl<'a> Default for Annotations<'a> {
     fn default() -> Self {
         Self {
+            annotation_types: Vec::new(),
+        }
+    }
+}
+
+impl<'a> Default for AnnotationType<'a> {
+    fn default() -> Self {
+        Self::Generic {
+            _span: Span { start: 0, end: 0 },
             docs: Default::default(),
-            span: Span { start: 0, end: 0 },
         }
     }
 }
@@ -1393,23 +1407,37 @@ fn parse_docs<'a>(tokens: &mut Tokenizer<'a>) -> Result<Docs<'a>> {
 fn parse_annotations<'a>(tokens: &mut Tokenizer<'a>) -> Result<Annotations<'a>> {
     let mut annotations = Annotations::default();
     let mut clone = tokens.clone();
-    let mut started = false;
     while let Some((span, token)) = clone.next_raw()? {
         match token {
             Token::Whitespace => {}
             Token::Annotation => {
                 let annotation = tokens.get_span(span);
-                if !started {
-                    annotations.span.start = span.start;
-                    started = true;
-                }
-                let trailing_ws = annotation
+                let beginning_trail = annotation
                     .bytes()
-                    .rev()
-                    .take_while(|ch| ch.is_ascii_whitespace())
+                    .take_while(|ch| ch.is_ascii_whitespace() || *ch == b'/')
                     .count();
-                annotations.span.end = span.end - (trailing_ws as u32);
-                annotations.docs.push(annotation.into());
+                let (_, mut annotation_string) = annotation.split_at(beginning_trail);
+                annotation_string = annotation_string.trim();
+                if annotation_string.contains("@unstable") {
+                    annotations.annotation_types.push(AnnotationType::Attribute(
+                        Attribute::Unstable {
+                            span,
+                            feature: Id { name: "", span },
+                        },
+                    ))
+                } else {
+                    let mut generic_annotation = AnnotationType::Generic {
+                        _span: span,
+                        docs: Default::default(),
+                    };
+                    match generic_annotation {
+                        AnnotationType::Generic { ref mut docs, .. } => {
+                            docs.push(annotation_string.into());
+                        }
+                        _ => (),
+                    }
+                    annotations.annotation_types.push(generic_annotation);
+                }
             }
             _ => break,
         };

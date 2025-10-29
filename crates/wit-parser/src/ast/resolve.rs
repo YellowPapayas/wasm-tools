@@ -1557,37 +1557,30 @@ impl<'a> Resolver<'a> {
     fn anns(&mut self, ann: &super::Annotations<'_>) -> Annotations {
         let mut anns = vec![];
 
-        for ann in ann.docs.iter() {
-            let contents = match ann.strip_prefix("///") {
-                Some(ann) => ann,
-                None => ann,
-            };
+        for ann_type in &ann.annotation_types {
+            match ann_type {
+                ast::AnnotationType::Attribute(attribute) => {
+                    match self.stability(std::slice::from_ref(attribute)) {
+                        Ok(stab) => anns.push(AnnotationType::Attribute(stab)),
+                        Err(_) => (),
+                    }
+                }
+                ast::AnnotationType::Generic { docs, .. } => {
+                    for ann in docs.iter() {
+                        let contents = match ann.strip_prefix("///") {
+                            Some(ann) => ann,
+                            None => ann,
+                        };
 
-            anns.push(contents.to_string());
-        }
-
-        let contents = if anns.is_empty() {
-            None
-        } else {
-            // NB: this notably, through the use of `lines`, normalizes `\r\n`
-            // to `\n`.
-            let mut contents = String::new();
-            for ann in anns {
-                if ann.is_empty() {
-                    contents.push_str("\n");
-                } else {
-                    for line in ann.lines() {
-                        contents.push_str(line);
-                        contents.push_str("\n");
+                        anns.push(AnnotationType::Generic(contents.to_string()));
                     }
                 }
             }
-            while contents.ends_with("\n") {
-                contents.pop();
-            }
-            Some(contents)
-        };
-        Annotations { contents }
+        }
+
+        Annotations {
+            annotation_types: anns,
+        }
     }
 
     fn stability(&mut self, attrs: &[ast::Attribute<'_>]) -> Result<Stability> {

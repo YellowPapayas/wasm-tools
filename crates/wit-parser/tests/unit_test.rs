@@ -7,24 +7,29 @@
 //!
 //!     cargo test --test all foo.wit
 use anyhow::{Error, Result};
+use indexmap::IndexSet;
 use std::path::Path;
 use wit_parser::*;
 
 #[test]
 fn main() -> Result<(), Error> {
-    let unresolved = UnresolvedPackageGroup::parse_file(Path::new("tests/guest-name.wit"))?;
+    let unresolved = UnresolvedPackageGroup::parse_file(Path::new("tests/strings.wit"))?;
 
     let mut resolve = Resolve::default();
+    // let mut feature_set = IndexSet::new();
+    // feature_set.insert("foo".to_string());
+    // resolve.features = feature_set;
     let package_id = resolve.push_group(unresolved)?;
     let package = &resolve.packages[package_id];
     println!("Package: {}", package.name);
-    println!("Docs: {:?}", package.docs);
+    println!("{:?}", package.docs);
 
     for (name, interface_id) in &package.interfaces {
         let interface = &resolve.interfaces[*interface_id];
         println!("  Interface: {}", name);
-        println!("  Docs: {:?}", interface.docs);
-        println!("  Annotations: {:?}", interface.annotations);
+        println!("  {:?}", interface.docs);
+        println!("  {:?}", interface.annotations);
+        println!("  Stability: {:?}", interface.stability);
 
         for (type_name, type_id) in &interface.types {
             let mut type_kind = &TypeDefKind::Unknown;
@@ -37,7 +42,7 @@ fn main() -> Result<(), Error> {
 
         for (func_name, func) in &interface.functions {
             println!("      Function: {}", func_name);
-            println!("      Annotations: {:?}", func.annotations);
+            println!("      {:?}", func.annotations);
 
             for (param_name, param_type) in &func.params {
                 println!("          Param: {}, {:?}", param_name, param_type);
