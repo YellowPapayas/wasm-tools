@@ -413,6 +413,12 @@ pub struct World {
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
 
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
+
     /// Stability annotation for this world itself.
     #[cfg_attr(
         feature = "serde",

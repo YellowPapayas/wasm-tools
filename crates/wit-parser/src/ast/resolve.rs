@@ -337,6 +337,7 @@ impl<'a> Resolver<'a> {
         self.worlds.alloc(World {
             name: String::new(),
             docs: Docs::default(),
+            annotations: Annotations::default(),
             exports: IndexMap::new(),
             imports: IndexMap::new(),
             package: None,
@@ -613,6 +614,7 @@ impl<'a> Resolver<'a> {
     fn resolve_world(&mut self, world_id: WorldId, world: &ast::World<'a>) -> Result<WorldId> {
         let docs = self.docs(&world.docs);
         self.worlds[world_id].docs = docs;
+        self.worlds[world_id].annotations = self.anns(&world.annotations);
         let stability = self.stability(&world.attributes)?;
         self.worlds[world_id].stability = stability;
 

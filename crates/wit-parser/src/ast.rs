@@ -262,7 +262,9 @@ impl<'a> AstItem<'a> {
             Some((_span, Token::Interface)) => {
                 Interface::parse(tokens, docs, anns, attributes).map(Self::Interface)
             }
-            Some((_span, Token::World)) => World::parse(tokens, docs, attributes).map(Self::World),
+            Some((_span, Token::World)) => {
+                World::parse(tokens, docs, anns, attributes).map(Self::World)
+            }
             Some((_span, Token::Use)) => ToplevelUse::parse(tokens, attributes).map(Self::Use),
             Some((_span, Token::Package)) => {
                 PackageFile::parse_nested(tokens, docs, attributes).map(Self::Package)
@@ -339,6 +341,7 @@ impl<'a> ToplevelUse<'a> {
 
 struct World<'a> {
     docs: Docs<'a>,
+    annotations: Annotations<'a>,
     attributes: Vec<Attribute<'a>>,
     name: Id<'a>,
     items: Vec<WorldItem<'a>>,
@@ -348,6 +351,7 @@ impl<'a> World<'a> {
     fn parse(
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
+        annotations: Annotations<'a>,
         attributes: Vec<Attribute<'a>>,
     ) -> Result<Self> {
         tokens.expect(Token::World)?;
@@ -355,6 +359,7 @@ impl<'a> World<'a> {
         let items = Self::parse_items(tokens)?;
         Ok(World {
             docs,
+            annotations,
             attributes,
             name,
             items,
@@ -744,15 +749,8 @@ pub struct Annotations<'a> {
 }
 
 enum AnnotationType<'a> {
-    Generic {
-        span: Span,
-        docs: Vec<Cow<'a, str>>,
-    },
-    Attribute {
-        span: Span,
-        key: String,
-        value: String,
-    },
+    Generic { docs: Vec<Cow<'a, str>> },
+    Attribute { key: String, value: String },
 }
 
 impl<'a> Default for Annotations<'a> {
@@ -766,7 +764,6 @@ impl<'a> Default for Annotations<'a> {
 impl<'a> Default for AnnotationType<'a> {
     fn default() -> Self {
         Self::Generic {
-            span: Span { start: 0, end: 0 },
             docs: Default::default(),
         }
     }
@@ -1421,13 +1418,12 @@ fn parse_docs<'a>(tokens: &mut Tokenizer<'a>) -> Result<Docs<'a>> {
 fn parse_annotations<'a>(tokens: &mut Tokenizer<'a>) -> Result<Annotations<'a>> {
     let mut annotations = Annotations::default();
     let mut clone = tokens.clone();
-    while let Some((span, token)) = clone.next_raw()? {
+    while let Some((_, token)) = clone.next_raw()? {
         match token {
             Token::Whitespace => {}
-            Token::Annotation => match parse_id(&mut clone) {
+            Token::Annotation => match parse_word(&mut clone) {
                 Ok(id) => {
                     let mut generic_annotation = AnnotationType::Generic {
-                        span: span,
                         docs: Default::default(),
                     };
                     match generic_annotation {
@@ -1452,7 +1448,6 @@ fn parse_annotations<'a>(tokens: &mut Tokenizer<'a>) -> Result<Annotations<'a>> 
                                 annotations
                                     .annotation_types
                                     .push(AnnotationType::Attribute {
-                                        span,
                                         key: tuple.0.name.to_string(),
                                         value: tuple.1.name.to_string(),
                                     })

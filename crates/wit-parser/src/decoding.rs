@@ -304,6 +304,7 @@ impl ComponentInfo {
         let world = decoder.resolve.worlds.alloc(World {
             name: world_name.to_string(),
             docs: Default::default(),
+            annotations: Default::default(),
             imports: Default::default(),
             exports: Default::default(),
             package: None,
@@ -1084,6 +1085,7 @@ impl WitPackageDecoder<'_> {
         let mut world = World {
             name: name.clone(),
             docs: Default::default(),
+            annotations: Default::default(),
             imports: Default::default(),
             exports: Default::default(),
             includes: Default::default(),

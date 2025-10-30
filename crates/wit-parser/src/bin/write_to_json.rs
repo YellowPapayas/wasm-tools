@@ -7,7 +7,7 @@ use serde_json;
 use std::env;
 use std::fs::File;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use wit_parser::*;
 
 fn main() -> Result<(), Error> {
