@@ -21,6 +21,9 @@
         "annotation_types": [
           {
             "Generic": "unstable"
+          },
+          {
+            "Generic": "testing a quote"
           }
         ]
       }

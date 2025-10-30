@@ -10,6 +10,7 @@ interface strings {
 }
 
 ///unstable
+/// "testing a quote"
 world the-world {
   import strings;
   export strings;

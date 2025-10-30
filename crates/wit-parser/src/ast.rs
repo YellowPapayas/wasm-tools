@@ -769,6 +769,14 @@ impl<'a> Default for AnnotationType<'a> {
     }
 }
 
+impl<'a> AnnotationType<'a> {
+    fn create_generic(s: String) -> Self {
+        Self::Generic {
+            docs: vec![s.into()],
+        }
+    }
+}
+
 struct TypeDef<'a> {
     docs: Docs<'a>,
     annotations: Annotations<'a>,
@@ -1421,42 +1429,53 @@ fn parse_annotations<'a>(tokens: &mut Tokenizer<'a>) -> Result<Annotations<'a>> 
     while let Some((_, token)) = clone.next_raw()? {
         match token {
             Token::Whitespace => {}
-            Token::Annotation => match parse_word(&mut clone) {
-                Ok(id) => {
-                    let mut generic_annotation = AnnotationType::Generic {
-                        docs: Default::default(),
-                    };
-                    match generic_annotation {
-                        AnnotationType::Generic { ref mut docs, .. } => {
-                            docs.push(id.name.into());
+            Token::Annotation => {
+                let next_token = clone.next();
+                match next_token {
+                    Ok(Some((sp, tok))) => match tok {
+                        Token::Id => {
+                            let contents = clone.parse_id(sp)?;
+                            annotations
+                                .annotation_types
+                                .push(AnnotationType::create_generic(contents.to_string()));
                         }
-                        _ => (),
-                    }
-                    annotations.annotation_types.push(generic_annotation);
-                }
-                Err(_) => {
-                    let pair_list =
-                        parse_list_trailer(&mut clone, Token::RightParen, |_docs, clone| {
-                            let key = parse_word(clone)?;
-                            clone.expect(Token::Equals)?;
-                            let value = parse_word(clone)?;
-                            Ok((key, value))
-                        });
-                    match pair_list {
-                        Ok(pairs) => {
-                            for tuple in pairs {
-                                annotations
-                                    .annotation_types
-                                    .push(AnnotationType::Attribute {
-                                        key: tuple.0.name.to_string(),
-                                        value: tuple.1.name.to_string(),
-                                    })
+                        Token::String => {
+                            let contents = tokens.parse_string(sp)?;
+                            annotations
+                                .annotation_types
+                                .push(AnnotationType::create_generic(contents.to_string()));
+                        }
+                        Token::LeftParen => {
+                            let pair_list = parse_list_trailer(
+                                &mut clone,
+                                Token::RightParen,
+                                |_docs, clone| {
+                                    let key = parse_word(clone)?;
+                                    clone.expect(Token::Equals)?;
+                                    let value = parse_word(clone)?;
+                                    Ok((key, value))
+                                },
+                            );
+                            match pair_list {
+                                Ok(pairs) => {
+                                    for tuple in pairs {
+                                        annotations.annotation_types.push(
+                                            AnnotationType::Attribute {
+                                                key: tuple.0.name.to_string(),
+                                                value: tuple.1.name.to_string(),
+                                            },
+                                        )
+                                    }
+                                }
+                                Err(_) => {}
                             }
                         }
-                        Err(_) => (),
-                    }
+                        _ => (),
+                    },
+                    Ok(None) => {}
+                    Err(_) => {}
                 }
-            },
+            }
             _ => break,
         };
         *tokens = clone.clone();
