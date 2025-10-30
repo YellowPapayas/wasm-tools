@@ -1578,7 +1578,7 @@ impl<'a> Resolver<'a> {
             [ast::Attribute::Annotation { features, .. }, ..] => Ok(Stability::Annotated {
                 annotations: features
                     .iter()
-                    .map(|(name, value)| (name.name.to_string(), value.name.to_string()))
+                    .map(|(name, value)| (name.to_string(), value.to_string()))
                     .collect(),
             }),
 

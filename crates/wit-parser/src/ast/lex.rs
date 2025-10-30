@@ -97,6 +97,7 @@ pub enum Token {
     ExplicitId,
 
     Integer,
+    StringLiteral,
 
     Include,
     With,
@@ -110,6 +111,7 @@ pub enum Error {
     InvalidEscape(u32, char),
     Unexpected(u32, char),
     UnterminatedComment(u32),
+    UnterminatedString(u32),
     Wanted {
         at: u32,
         expected: &'static str,
@@ -168,6 +170,19 @@ impl<'a> Tokenizer<'a> {
         let id_part = token.strip_prefix('%').unwrap();
         validate_id(span.start, id_part)?;
         Ok(id_part)
+    }
+
+    /// Parses a string literal and returns the content between the quotes.
+    ///
+    /// This function extracts the raw string content without processing escape sequences.
+    /// The content can span multiple lines.
+    pub fn parse_string(&self, span: Span) -> Result<&'a str> {
+        let token = self.get_span(span);
+        // Strip leading and trailing quotes
+        let content = token.strip_prefix('"')
+            .and_then(|s| s.strip_suffix('"'))
+            .unwrap();
+        Ok(content)
     }
 
     pub fn next(&mut self) -> Result<Option<(Span, Token)>, Error> {
@@ -329,6 +344,30 @@ impl<'a> Tokenizer<'a> {
                 }
 
                 Integer
+            }
+
+            '"' => {
+                // Parse string literal - consume everything until closing quote
+                // No escape sequence handling, multiline allowed
+                let mut iter = self.chars.clone();
+                loop {
+                    match iter.next() {
+                        Some((_, '"')) => {
+                            // Found closing quote
+                            self.chars = iter;
+                            break;
+                        }
+                        Some(_) => {
+                            // Any other character is part of the string
+                            self.chars = iter.clone();
+                        }
+                        None => {
+                            // End of input without closing quote
+                            return Err(Error::UnterminatedString(start));
+                        }
+                    }
+                }
+                StringLiteral
             }
 
             ch => return Err(Error::Unexpected(start, ch)),
@@ -578,6 +617,7 @@ impl Token {
             Package => "keyword `package`",
             Constructor => "keyword `constructor`",
             Integer => "an integer",
+            StringLiteral => "a string literal",
             Include => "keyword `include`",
             With => "keyword `with`",
             Async => "keyword `async`",
@@ -592,6 +632,7 @@ impl fmt::Display for Error {
         match self {
             Error::Unexpected(_, ch) => write!(f, "unexpected character {ch:?}"),
             Error::UnterminatedComment(_) => write!(f, "unterminated block comment"),
+            Error::UnterminatedString(_) => write!(f, "unterminated string literal"),
             Error::Wanted {
                 expected, found, ..
             } => write!(f, "expected {expected}, found {found}"),

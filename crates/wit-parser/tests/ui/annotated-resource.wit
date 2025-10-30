@@ -2,7 +2,7 @@ package a:b@0.1.0;
 
 interface foo {
 
-  @annotation(serde = serialize, serde = deserialize)
+  @annotation(rust = "#[derive(Serialize, Deserialize)]", python="@pyserde")
   x: func(y: string);
 }
 

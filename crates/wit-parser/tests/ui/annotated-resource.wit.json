@@ -31,12 +31,12 @@
             "annotated": {
               "annotations": [
                 [
-                  "serde",
-                  "serialize"
+                  "rust",
+                  "#[derive(Serialize, Deserialize)]"
                 ],
                 [
-                  "serde",
-                  "deserialize"
+                  "python",
+                  "@pyserde"
                 ]
               ]
             }

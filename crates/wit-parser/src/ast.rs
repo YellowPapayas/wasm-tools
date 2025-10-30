@@ -1599,7 +1599,8 @@ enum Attribute<'a> {
     },
     Annotation {
         span: Span,
-        features: Vec<(Id<'a>, Id<'a>)>,
+        // features: Vec<(Id<'a>, Id<'a>)>,
+        features: Vec<(&'a str, &'a str)>,
     }, // key-value store of annotations
 }
 
@@ -1648,28 +1649,18 @@ impl<'a> Attribute<'a> {
                         Token::LeftParen,
                         Token::RightParen,
                         |_docs, tokens| {
-                            println!("TEST");
-                            let key = parse_id(tokens)?;
-                            println!("Key: {:?}", key);
+                            // Parses a key-value pair seperated by an equals sign
+                            let key = tokens.expect(Token::Id)?;
+                            
                             tokens.expect(Token::Equals)?;
-                            let value = parse_id(tokens)?;
-                            println!("Key: {:?}", key);
-                            Ok((key, value))
+                            
+                            let value = tokens.expect(Token::StringLiteral)?;
+                            let string_value = tokens.parse_string(value)?;
+                            
+                            Ok((tokens.get_span(key), string_value))
                         },
                     )?;
 
-                    // tokens.expect(Token::LeftParen)?;
-
-                    // loop {
-                    //     let (span, next_token) = tokens.next()?;
-
-                    //     next_token.1.
-                    // }
-
-                    // eat_id(tokens, "feature")?;
-                    // tokens.expect(Token::Equals)?;
-                    // let feature = parse_id(tokens)?;
-                    // tokens.expect(Token::RightParen)?;
                     Attribute::Annotation {
                         span: id.span,
                         features: pairs,
@@ -1865,6 +1856,7 @@ impl SourceMap {
             let pos = match lex {
                 lex::Error::Unexpected(at, _)
                 | lex::Error::UnterminatedComment(at)
+                | lex::Error::UnterminatedString(at)
                 | lex::Error::Wanted { at, .. }
                 | lex::Error::InvalidCharInId(at, _)
                 | lex::Error::IdPartEmpty(at)
