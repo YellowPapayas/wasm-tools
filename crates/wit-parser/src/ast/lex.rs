@@ -1,5 +1,4 @@
 use anyhow::{Result, bail};
-use std::char;
 use std::fmt;
 use std::str;
 use unicode_xid::UnicodeXID;
@@ -98,6 +97,7 @@ pub enum Token {
     ExplicitId,
 
     Integer,
+    String,
 
     Include,
     With,
@@ -108,7 +108,6 @@ pub enum Token {
 pub enum Error {
     InvalidCharInId(u32, char),
     IdPartEmpty(u32),
-    InvalidEscape(u32, char),
     Unexpected(u32, char),
     UnterminatedComment(u32),
     Wanted {
@@ -169,6 +168,16 @@ impl<'a> Tokenizer<'a> {
         let id_part = token.strip_prefix('%').unwrap();
         validate_id(span.start, id_part)?;
         Ok(id_part)
+    }
+
+    pub fn parse_string(&self, span: Span) -> Result<std::string::String> {
+        let token = self.get_span(span);
+        // Remove surrounding quotes and return content as-is
+        let content = token.strip_prefix('"')
+            .and_then(|s| s.strip_suffix('"'))
+            .ok_or_else(|| anyhow::anyhow!("invalid string literal"))?;
+
+        Ok(content.to_string())
     }
 
     pub fn next(&mut self) -> Result<Option<(Span, Token)>, Error> {
@@ -334,6 +343,18 @@ impl<'a> Tokenizer<'a> {
                 }
 
                 Integer
+            }
+
+            '"' => {
+                // Parse a string literal
+                loop {
+                    match self.chars.next() {
+                        Some((_, '"')) => break,
+                        Some(_) => {},
+                        None => return Err(Error::UnterminatedComment(start)),
+                    }
+                }
+                Token::String
             }
 
             ch => return Err(Error::Unexpected(start, ch)),
@@ -584,6 +605,7 @@ impl Token {
             Package => "keyword `package`",
             Constructor => "keyword `constructor`",
             Integer => "an integer",
+            String => "a string literal",
             Include => "keyword `include`",
             With => "keyword `with`",
             Async => "keyword `async`",
@@ -603,7 +625,6 @@ impl fmt::Display for Error {
             } => write!(f, "expected {expected}, found {found}"),
             Error::InvalidCharInId(_, ch) => write!(f, "invalid character in identifier {ch:?}"),
             Error::IdPartEmpty(_) => write!(f, "identifiers must have characters between '-'s"),
-            Error::InvalidEscape(_, ch) => write!(f, "invalid escape in string {ch:?}"),
         }
     }
 }
@@ -751,4 +772,66 @@ fn test_tokenizer() {
     assert!(collect("\u{b}").is_err(), "control code");
     assert!(collect("\u{c}").is_err(), "control code");
     assert!(collect("\u{85}").is_err(), "control code");
+}
+
+#[test]
+fn test_string_lexing() {
+    fn collect(s: &str) -> Result<Vec<Token>> {
+        let mut t = Tokenizer::new(s, 0, None)?;
+        let mut tokens = Vec::new();
+        while let Some(token) = t.next()? {
+            tokens.push(token.1);
+        }
+        Ok(tokens)
+    }
+
+    // Basic string literals
+    assert_eq!(collect(r#""""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello world""#).unwrap(), vec![Token::String]);
+
+    // Strings with backslashes (no longer treated as escapes)
+    assert_eq!(collect(r#""hello\nworld""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello\tworld""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello\rworld""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello\\world""#).unwrap(), vec![Token::String]);
+    assert_eq!(collect(r#""hello\qworld""#).unwrap(), vec![Token::String]);
+
+    // Multiple strings
+    assert_eq!(
+        collect(r#""hello" "world""#).unwrap(),
+        vec![Token::String, Token::String]
+    );
+
+    // Strings mixed with other tokens
+    assert_eq!(
+        collect(r#"foo "bar" baz"#).unwrap(),
+        vec![Token::Id, Token::String, Token::Id]
+    );
+
+    // Invalid strings should error
+    assert!(collect(r#""unterminated"#).is_err());
+}
+
+#[test]
+fn test_parse_string() {
+    fn parse_string(s: &str) -> Result<std::string::String> {
+        let mut t = Tokenizer::new(s, 0, None)?;
+        match t.next()? {
+            Some((span, Token::String)) => t.parse_string(span),
+            _ => bail!("expected string token"),
+        }
+    }
+
+    // Basic strings
+    assert_eq!(parse_string(r#""""#).unwrap(), "");
+    assert_eq!(parse_string(r#""hello""#).unwrap(), "hello");
+    assert_eq!(parse_string(r#""hello world""#).unwrap(), "hello world");
+
+    // Strings with backslashes (returned as-is, no escape processing)
+    assert_eq!(parse_string(r#""hello\nworld""#).unwrap(), r"hello\nworld");
+    assert_eq!(parse_string(r#""hello\tworld""#).unwrap(), r"hello\tworld");
+    assert_eq!(parse_string(r#""hello\rworld""#).unwrap(), r"hello\rworld");
+    assert_eq!(parse_string(r#""hello\\world""#).unwrap(), r"hello\\world");
+    assert_eq!(parse_string(r#""a\nb\tc\\d""#).unwrap(), r"a\nb\tc\\d");
 }

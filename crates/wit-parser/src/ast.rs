@@ -1938,8 +1938,7 @@ impl SourceMap {
                 | lex::Error::UnterminatedComment(at)
                 | lex::Error::Wanted { at, .. }
                 | lex::Error::InvalidCharInId(at, _)
-                | lex::Error::IdPartEmpty(at)
-                | lex::Error::InvalidEscape(at, _) => *at,
+                | lex::Error::IdPartEmpty(at) => *at,
             };
             let msg = self.highlight_err(pos, None, lex);
             bail!("{msg}")
