@@ -57,6 +57,7 @@ impl<'a> PackageFile<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>
     ) -> Result<Self> {
         let span = tokens.expect(Token::Package)?;
         if !attributes.is_empty() {
@@ -64,6 +65,11 @@ impl<'a> PackageFile<'a> {
                 span,
                 format!("cannot place attributes on nested packages"),
             ));
+        } else if !annotations.is_empty() {
+            bail!(Error::new( // TODO: is this really necessary?
+                span,
+                format!("cannot place annotations on nested packages"),
+            ));            
         }
         let package_id = PackageName::parse(tokens, docs)?;
         tokens.expect(Token::LeftBrace)?;
@@ -256,14 +262,17 @@ enum AstItem<'a> {
 impl<'a> AstItem<'a> {
     fn parse(tokens: &mut Tokenizer<'a>, docs: Docs<'a>) -> Result<Self> {
         let attributes = Attribute::parse_list(tokens)?;
+        // println!("{:?}", );
+        let annotations = Annotation::parse_list(tokens)?;
+        
         match tokens.clone().next()? {
             Some((_span, Token::Interface)) => {
-                Interface::parse(tokens, docs, attributes).map(Self::Interface)
+                Interface::parse(tokens, docs, attributes, annotations).map(Self::Interface)
             }
-            Some((_span, Token::World)) => World::parse(tokens, docs, attributes).map(Self::World),
-            Some((_span, Token::Use)) => ToplevelUse::parse(tokens, attributes).map(Self::Use),
+            Some((_span, Token::World)) => World::parse(tokens, docs, attributes, annotations).map(Self::World),
+            Some((_span, Token::Use)) => ToplevelUse::parse(tokens, attributes, annotations).map(Self::Use),
             Some((_span, Token::Package)) => {
-                PackageFile::parse_nested(tokens, docs, attributes).map(Self::Package)
+                PackageFile::parse_nested(tokens, docs, attributes, annotations).map(Self::Package)
             }
             other => Err(err_expected(tokens, "`world`, `interface` or `use`", other).into()),
         }
@@ -312,12 +321,13 @@ impl<'a> PackageName<'a> {
 struct ToplevelUse<'a> {
     span: Span,
     attributes: Vec<Attribute<'a>>,
+    annotations: Vec<Annotation<'a>>,
     item: UsePath<'a>,
     as_: Option<Id<'a>>,
 }
 
 impl<'a> ToplevelUse<'a> {
-    fn parse(tokens: &mut Tokenizer<'a>, attributes: Vec<Attribute<'a>>) -> Result<Self> {
+    fn parse(tokens: &mut Tokenizer<'a>, attributes: Vec<Attribute<'a>>, annotations: Vec<Annotation<'a>>) -> Result<Self> {
         let span = tokens.expect(Token::Use)?;
         let item = UsePath::parse(tokens)?;
         let as_ = if tokens.eat(Token::As)? {
@@ -329,6 +339,7 @@ impl<'a> ToplevelUse<'a> {
         Ok(ToplevelUse {
             span,
             attributes,
+            annotations,
             item,
             as_,
         })
@@ -338,6 +349,7 @@ impl<'a> ToplevelUse<'a> {
 struct World<'a> {
     docs: Docs<'a>,
     attributes: Vec<Attribute<'a>>,
+    annotations: Vec<Annotation<'a>>,
     name: Id<'a>,
     items: Vec<WorldItem<'a>>,
 }
@@ -347,6 +359,7 @@ impl<'a> World<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>
     ) -> Result<Self> {
         tokens.expect(Token::World)?;
         let name = parse_id(tokens)?;
@@ -354,6 +367,7 @@ impl<'a> World<'a> {
         Ok(World {
             docs,
             attributes,
+            annotations,
             name,
             items,
         })
@@ -368,7 +382,9 @@ impl<'a> World<'a> {
                 break;
             }
             let attributes = Attribute::parse_list(tokens)?;
-            items.push(WorldItem::parse(tokens, docs, attributes)?);
+            let annotations = Annotation::parse_list(tokens)?;
+            
+            items.push(WorldItem::parse(tokens, docs, attributes, annotations)?);
         }
         Ok(items)
     }
@@ -387,35 +403,36 @@ impl<'a> WorldItem<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>,
     ) -> Result<WorldItem<'a>> {
         match tokens.clone().next()? {
             Some((_span, Token::Import)) => {
-                Import::parse(tokens, docs, attributes).map(WorldItem::Import)
+                Import::parse(tokens, docs, attributes, annotations).map(WorldItem::Import)
             }
             Some((_span, Token::Export)) => {
-                Export::parse(tokens, docs, attributes).map(WorldItem::Export)
+                Export::parse(tokens, docs, attributes, annotations).map(WorldItem::Export)
             }
-            Some((_span, Token::Use)) => Use::parse(tokens, attributes).map(WorldItem::Use),
+            Some((_span, Token::Use)) => Use::parse(tokens, attributes, annotations).map(WorldItem::Use),
             Some((_span, Token::Type)) => {
-                TypeDef::parse(tokens, docs, attributes).map(WorldItem::Type)
+                TypeDef::parse(tokens, docs, attributes, annotations).map(WorldItem::Type)
             }
             Some((_span, Token::Flags)) => {
-                TypeDef::parse_flags(tokens, docs, attributes).map(WorldItem::Type)
+                TypeDef::parse_flags(tokens, docs, attributes, annotations).map(WorldItem::Type)
             }
             Some((_span, Token::Resource)) => {
-                TypeDef::parse_resource(tokens, docs, attributes).map(WorldItem::Type)
+                TypeDef::parse_resource(tokens, docs, attributes, annotations).map(WorldItem::Type)
             }
             Some((_span, Token::Record)) => {
-                TypeDef::parse_record(tokens, docs, attributes).map(WorldItem::Type)
+                TypeDef::parse_record(tokens, docs, attributes, annotations).map(WorldItem::Type)
             }
             Some((_span, Token::Variant)) => {
-                TypeDef::parse_variant(tokens, docs, attributes).map(WorldItem::Type)
+                TypeDef::parse_variant(tokens, docs, attributes, annotations).map(WorldItem::Type)
             }
             Some((_span, Token::Enum)) => {
-                TypeDef::parse_enum(tokens, docs, attributes).map(WorldItem::Type)
+                TypeDef::parse_enum(tokens, docs, attributes, annotations).map(WorldItem::Type)
             }
             Some((_span, Token::Include)) => {
-                Include::parse(tokens, attributes).map(WorldItem::Include)
+                Include::parse(tokens, attributes, annotations).map(WorldItem::Include)
             }
             other => Err(err_expected(
                 tokens,
@@ -430,6 +447,7 @@ impl<'a> WorldItem<'a> {
 struct Import<'a> {
     docs: Docs<'a>,
     attributes: Vec<Attribute<'a>>,
+    annotations: Vec<Annotation<'a>>,
     kind: ExternKind<'a>,
 }
 
@@ -438,12 +456,14 @@ impl<'a> Import<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>,
     ) -> Result<Import<'a>> {
         tokens.expect(Token::Import)?;
         let kind = ExternKind::parse(tokens)?;
         Ok(Import {
             docs,
             attributes,
+            annotations,
             kind,
         })
     }
@@ -452,6 +472,7 @@ impl<'a> Import<'a> {
 struct Export<'a> {
     docs: Docs<'a>,
     attributes: Vec<Attribute<'a>>,
+    annotations: Vec<Annotation<'a>>,
     kind: ExternKind<'a>,
 }
 
@@ -460,12 +481,14 @@ impl<'a> Export<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>,
     ) -> Result<Export<'a>> {
         tokens.expect(Token::Export)?;
         let kind = ExternKind::parse(tokens)?;
         Ok(Export {
             docs,
             attributes,
+            annotations,
             kind,
         })
     }
@@ -526,6 +549,7 @@ impl<'a> ExternKind<'a> {
 struct Interface<'a> {
     docs: Docs<'a>,
     attributes: Vec<Attribute<'a>>,
+    annotations: Vec<Annotation<'a>>,
     name: Id<'a>,
     items: Vec<InterfaceItem<'a>>,
 }
@@ -535,6 +559,7 @@ impl<'a> Interface<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>
     ) -> Result<Self> {
         tokens.expect(Token::Interface)?;
         let name = parse_id(tokens)?;
@@ -542,6 +567,7 @@ impl<'a> Interface<'a> {
         Ok(Interface {
             docs,
             attributes,
+            annotations,
             name,
             items,
         })
@@ -556,7 +582,9 @@ impl<'a> Interface<'a> {
                 break;
             }
             let attributes = Attribute::parse_list(tokens)?;
-            items.push(InterfaceItem::parse(tokens, docs, attributes)?);
+            let annotations = Annotation::parse_list(tokens)?;
+            
+            items.push(InterfaceItem::parse(tokens, docs, attributes, annotations)?);
         }
         Ok(items)
     }
@@ -577,6 +605,7 @@ enum InterfaceItem<'a> {
 
 struct Use<'a> {
     attributes: Vec<Attribute<'a>>,
+    annotations: Vec<Annotation<'a>>,
     from: UsePath<'a>,
     names: Vec<UseName<'a>>,
 }
@@ -630,7 +659,7 @@ struct UseName<'a> {
 }
 
 impl<'a> Use<'a> {
-    fn parse(tokens: &mut Tokenizer<'a>, attributes: Vec<Attribute<'a>>) -> Result<Self> {
+    fn parse(tokens: &mut Tokenizer<'a>, attributes: Vec<Attribute<'a>>, annotations: Vec<Annotation<'a>>) -> Result<Self> {
         tokens.expect(Token::Use)?;
         let from = UsePath::parse(tokens)?;
         tokens.expect(Token::Period)?;
@@ -654,6 +683,7 @@ impl<'a> Use<'a> {
         tokens.expect_semicolon()?;
         Ok(Use {
             attributes,
+            annotations,
             from,
             names,
         })
@@ -663,6 +693,7 @@ impl<'a> Use<'a> {
 struct Include<'a> {
     from: UsePath<'a>,
     attributes: Vec<Attribute<'a>>,
+    annotations: Vec<Annotation<'a>>,
     names: Vec<IncludeName<'a>>,
 }
 
@@ -672,7 +703,7 @@ struct IncludeName<'a> {
 }
 
 impl<'a> Include<'a> {
-    fn parse(tokens: &mut Tokenizer<'a>, attributes: Vec<Attribute<'a>>) -> Result<Self> {
+    fn parse(tokens: &mut Tokenizer<'a>, attributes: Vec<Attribute<'a>>, annotations: Vec<Annotation<'a>>) -> Result<Self> {
         tokens.expect(Token::Include)?;
         let from = UsePath::parse(tokens)?;
 
@@ -695,6 +726,7 @@ impl<'a> Include<'a> {
 
         Ok(Include {
             attributes,
+            annotations,
             from,
             names,
         })
@@ -734,6 +766,7 @@ impl<'a> Default for Docs<'a> {
 struct TypeDef<'a> {
     docs: Docs<'a>,
     attributes: Vec<Attribute<'a>>,
+    annotations: Vec<Annotation<'a>>,
     name: Id<'a>,
     ty: Type<'a>,
 }
@@ -992,30 +1025,31 @@ impl<'a> InterfaceItem<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>,
     ) -> Result<InterfaceItem<'a>> {
         match tokens.clone().next()? {
             Some((_span, Token::Type)) => {
-                TypeDef::parse(tokens, docs, attributes).map(InterfaceItem::TypeDef)
+                TypeDef::parse(tokens, docs, attributes, annotations).map(InterfaceItem::TypeDef)
             }
             Some((_span, Token::Flags)) => {
-                TypeDef::parse_flags(tokens, docs, attributes).map(InterfaceItem::TypeDef)
+                TypeDef::parse_flags(tokens, docs, attributes, annotations).map(InterfaceItem::TypeDef)
             }
             Some((_span, Token::Enum)) => {
-                TypeDef::parse_enum(tokens, docs, attributes).map(InterfaceItem::TypeDef)
+                TypeDef::parse_enum(tokens, docs, attributes, annotations).map(InterfaceItem::TypeDef)
             }
             Some((_span, Token::Variant)) => {
-                TypeDef::parse_variant(tokens, docs, attributes).map(InterfaceItem::TypeDef)
+                TypeDef::parse_variant(tokens, docs, attributes, annotations).map(InterfaceItem::TypeDef)
             }
             Some((_span, Token::Resource)) => {
-                TypeDef::parse_resource(tokens, docs, attributes).map(InterfaceItem::TypeDef)
+                TypeDef::parse_resource(tokens, docs, attributes, annotations).map(InterfaceItem::TypeDef)
             }
             Some((_span, Token::Record)) => {
-                TypeDef::parse_record(tokens, docs, attributes).map(InterfaceItem::TypeDef)
+                TypeDef::parse_record(tokens, docs, attributes, annotations).map(InterfaceItem::TypeDef)
             }
             Some((_span, Token::Id)) | Some((_span, Token::ExplicitId)) => {
                 NamedFunc::parse(tokens, docs, attributes).map(InterfaceItem::Func)
             }
-            Some((_span, Token::Use)) => Use::parse(tokens, attributes).map(InterfaceItem::Use),
+            Some((_span, Token::Use)) => Use::parse(tokens, attributes, annotations).map(InterfaceItem::Use),
             other => Err(err_expected(tokens, "`type`, `resource` or `func`", other).into()),
         }
     }
@@ -1026,6 +1060,7 @@ impl<'a> TypeDef<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>,
     ) -> Result<Self> {
         tokens.expect(Token::Type)?;
         let name = parse_id(tokens)?;
@@ -1035,6 +1070,7 @@ impl<'a> TypeDef<'a> {
         Ok(TypeDef {
             docs,
             attributes,
+            annotations,
             name,
             ty,
         })
@@ -1044,6 +1080,7 @@ impl<'a> TypeDef<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>,
     ) -> Result<Self> {
         tokens.expect(Token::Flags)?;
         let name = parse_id(tokens)?;
@@ -1062,6 +1099,7 @@ impl<'a> TypeDef<'a> {
         Ok(TypeDef {
             docs,
             attributes,
+            annotations,
             name,
             ty,
         })
@@ -1071,6 +1109,7 @@ impl<'a> TypeDef<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>,
     ) -> Result<Self> {
         tokens.expect(Token::Resource)?;
         let name = parse_id(tokens)?;
@@ -1091,6 +1130,7 @@ impl<'a> TypeDef<'a> {
         Ok(TypeDef {
             docs,
             attributes,
+            annotations,
             name,
             ty,
         })
@@ -1100,6 +1140,7 @@ impl<'a> TypeDef<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>,
     ) -> Result<Self> {
         tokens.expect(Token::Record)?;
         let name = parse_id(tokens)?;
@@ -1120,6 +1161,7 @@ impl<'a> TypeDef<'a> {
         Ok(TypeDef {
             docs,
             attributes,
+            annotations,
             name,
             ty,
         })
@@ -1129,6 +1171,7 @@ impl<'a> TypeDef<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>,
     ) -> Result<Self> {
         tokens.expect(Token::Variant)?;
         let name = parse_id(tokens)?;
@@ -1154,6 +1197,7 @@ impl<'a> TypeDef<'a> {
         Ok(TypeDef {
             docs,
             attributes,
+            annotations,
             name,
             ty,
         })
@@ -1163,6 +1207,7 @@ impl<'a> TypeDef<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>,
     ) -> Result<Self> {
         tokens.expect(Token::Enum)?;
         let name = parse_id(tokens)?;
@@ -1181,6 +1226,7 @@ impl<'a> TypeDef<'a> {
         Ok(TypeDef {
             docs,
             attributes,
+            annotations,
             name,
             ty,
         })
@@ -1584,6 +1630,42 @@ fn err_expected(
     }
 }
 
+struct Annotation<'a> {
+    name: &'a str,
+    span: Span,
+    
+    fields: Vec<(&'a str, &'a str)>,
+}
+
+impl<'a> Annotation<'a> {
+    fn parse_list(tokens: &mut Tokenizer<'a>) -> Result<Vec<Annotation<'a>>> {
+        let mut annotations = Vec::new();
+        
+        while tokens.eat(Token::Hash)? {
+            let name = tokens.expect(Token::Id)?;
+            let name_string = tokens.get_span(name);
+            
+            let kv_list = parse_list(tokens, Token::LeftParen, Token::RightParen, |_docs, tokens| {
+                let key = tokens.expect(Token::Id)?;
+                let key_string = tokens.get_span(key);
+                
+                tokens.expect(Token::Equals)?;
+                
+                let value = tokens.expect(Token::StringLiteral)?;
+                let value_string = tokens.parse_string(value)?;
+                
+                Ok((key_string, value_string))
+            })?;
+            
+            annotations.push(Annotation { name: name_string, span: name, fields: kv_list });
+        }
+        Ok(annotations)
+    }
+}
+
+
+
+
 enum Attribute<'a> {
     Since {
         span: Span,
@@ -1643,7 +1725,7 @@ impl<'a> Attribute<'a> {
                         version,
                     }
                 }
-                "annotation" => {
+                "annotation" => {  // TODO: remove
                     let pairs = parse_list(
                         tokens,
                         Token::LeftParen,

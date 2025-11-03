@@ -46,6 +46,7 @@ pub enum Token {
     GreaterThan,
     RArrow,
     Star,
+    Hash,
     At,
     Slash,
     Plus,
@@ -249,6 +250,7 @@ impl<'a> Tokenizer<'a> {
             '<' => LessThan,
             '>' => GreaterThan,
             '*' => Star,
+            '#' => Hash,
             '@' => At,
             '-' => {
                 if self.eatc('>') {
@@ -602,6 +604,7 @@ impl Token {
             ExplicitId => "an '%' identifier",
             RArrow => "`->`",
             Star => "`*`",
+            Hash => "`#`",
             At => "`@`",
             Slash => "`/`",
             Plus => "`+`",

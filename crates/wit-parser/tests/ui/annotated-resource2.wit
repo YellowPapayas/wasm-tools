@@ -1,0 +1,14 @@
+package a:b@0.1.0;
+
+interface foo {
+
+  #rust(derive = "Serialize, Deserialize", derive = "Debug")  // #[derive(Serialize, Deserialize, Debug)
+  #python(decorate = "pyserde")             // @pyserde
+  #whatever()
+  x: func(y: string);
+}
+
+world bar {
+  export foo;
+
+}
