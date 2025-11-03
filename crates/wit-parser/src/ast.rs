@@ -149,6 +149,7 @@ impl<'a> DeclList<'a> {
         f: &mut dyn FnMut(
             Option<&'b Id<'a>>,
             &'b [Attribute<'a>],
+            &'b [Annotation<'a>],
             &'b UsePath<'a>,
             Option<&'b [UseName<'a>]>,
             WorldOrInterface,
@@ -168,6 +169,7 @@ impl<'a> DeclList<'a> {
                             WorldItem::Use(u) => f(
                                 None,
                                 &u.attributes,
+                                &u.annotations,
                                 &u.from,
                                 Some(&u.names),
                                 WorldOrInterface::Interface,
@@ -175,28 +177,30 @@ impl<'a> DeclList<'a> {
                             WorldItem::Include(i) => f(
                                 Some(&world.name),
                                 &i.attributes,
+                                &i.annotations,
                                 &i.from,
                                 None,
                                 WorldOrInterface::World,
                             )?,
                             WorldItem::Type(_) => {}
                             WorldItem::Import(Import {
-                                kind, attributes, ..
-                            }) => imports.push((kind, attributes)),
+                                kind, attributes, annotations, ..
+                            }) => imports.push((kind, attributes, annotations)),
                             WorldItem::Export(Export {
-                                kind, attributes, ..
-                            }) => exports.push((kind, attributes)),
+                                kind, attributes, annotations, ..
+                            }) => exports.push((kind, attributes, annotations)),
                         }
                     }
 
                     let mut visit_kind =
-                        |kind: &'b ExternKind<'a>, attrs: &'b [Attribute<'a>]| match kind {
+                        |kind: &'b ExternKind<'a>, attrs: &'b [Attribute<'a>], annos: &'b [Annotation<'a>]| match kind {
                             ExternKind::Interface(_, items) => {
                                 for item in items {
                                     match item {
                                         InterfaceItem::Use(u) => f(
                                             None,
                                             &u.attributes,
+                                            &u.annotations,
                                             &u.from,
                                             Some(&u.names),
                                             WorldOrInterface::Interface,
@@ -207,16 +211,16 @@ impl<'a> DeclList<'a> {
                                 Ok(())
                             }
                             ExternKind::Path(path) => {
-                                f(None, attrs, path, None, WorldOrInterface::Interface)
+                                f(None, attrs, annos, path, None, WorldOrInterface::Interface)
                             }
                             ExternKind::Func(..) => Ok(()),
                         };
 
-                    for (kind, attrs) in imports {
-                        visit_kind(kind, attrs)?;
+                    for (kind, attrs, annos) in imports {
+                        visit_kind(kind, attrs, annos)?;
                     }
-                    for (kind, attrs) in exports {
-                        visit_kind(kind, attrs)?;
+                    for (kind, attrs, annos) in exports {
+                        visit_kind(kind, attrs, annos)?;
                     }
                 }
                 AstItem::Interface(i) => {
@@ -225,6 +229,7 @@ impl<'a> DeclList<'a> {
                             InterfaceItem::Use(u) => f(
                                 Some(&i.name),
                                 &u.attributes,
+                                &u.annotations,
                                 &u.from,
                                 Some(&u.names),
                                 WorldOrInterface::Interface,
@@ -239,6 +244,7 @@ impl<'a> DeclList<'a> {
                     f(
                         None,
                         &u.attributes,
+                        &u.annotations,
                         &u.item,
                         None,
                         WorldOrInterface::Unknown,
@@ -830,6 +836,7 @@ impl<'a> ResourceFunc<'a> {
     fn parse(
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>,
         tokens: &mut Tokenizer<'a>,
     ) -> Result<Self> {
         match tokens.clone().next()? {
@@ -852,6 +859,7 @@ impl<'a> ResourceFunc<'a> {
                 Ok(ResourceFunc::Constructor(NamedFunc {
                     docs,
                     attributes,
+                    annotations,
                     name: Id {
                         span,
                         name: "constructor",
@@ -877,6 +885,7 @@ impl<'a> ResourceFunc<'a> {
                 Ok(ctor(NamedFunc {
                     docs,
                     attributes,
+                    annotations,
                     name,
                     func,
                 }))
@@ -975,6 +984,7 @@ struct Stream<'a> {
 struct NamedFunc<'a> {
     docs: Docs<'a>,
     attributes: Vec<Attribute<'a>>,
+    annotations: Vec<Annotation<'a>>,
     name: Id<'a>,
     func: Func<'a>,
 }
@@ -1047,7 +1057,7 @@ impl<'a> InterfaceItem<'a> {
                 TypeDef::parse_record(tokens, docs, attributes, annotations).map(InterfaceItem::TypeDef)
             }
             Some((_span, Token::Id)) | Some((_span, Token::ExplicitId)) => {
-                NamedFunc::parse(tokens, docs, attributes).map(InterfaceItem::Func)
+                NamedFunc::parse(tokens, docs, attributes, annotations).map(InterfaceItem::Func)
             }
             Some((_span, Token::Use)) => Use::parse(tokens, attributes, annotations).map(InterfaceItem::Use),
             other => Err(err_expected(tokens, "`type`, `resource` or `func`", other).into()),
@@ -1118,7 +1128,8 @@ impl<'a> TypeDef<'a> {
             while !tokens.eat(Token::RightBrace)? {
                 let docs = parse_docs(tokens)?;
                 let attributes = Attribute::parse_list(tokens)?;
-                funcs.push(ResourceFunc::parse(docs, attributes, tokens)?);
+                let annotations = Annotation::parse_list(tokens)?;
+                funcs.push(ResourceFunc::parse(docs, attributes, annotations, tokens)?);
             }
         } else {
             tokens.expect_semicolon()?;
@@ -1238,6 +1249,7 @@ impl<'a> NamedFunc<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
+        annotations: Vec<Annotation<'a>>
     ) -> Result<Self> {
         let name = parse_id(tokens)?;
         tokens.expect(Token::Colon)?;
@@ -1246,6 +1258,7 @@ impl<'a> NamedFunc<'a> {
         Ok(NamedFunc {
             docs,
             attributes,
+            annotations,
             name,
             func,
         })

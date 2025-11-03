@@ -257,7 +257,7 @@ impl<'a> Resolver<'a> {
         let mut foreign_worlds = mem::take(&mut self.foreign_worlds);
         for decl_list in decl_lists {
             decl_list
-                .for_each_path(&mut |_, _attrs, path, _names, world_or_iface| {
+                .for_each_path(&mut |_, _attrs, _annos, path, _names, world_or_iface| {
                     let (id, name) = match path {
                         ast::UsePath::Package { id, name } => (id, name),
                         _ => return Ok(()),
@@ -315,6 +315,7 @@ impl<'a> Resolver<'a> {
             types: IndexMap::new(),
             docs: Docs::default(),
             stability: Default::default(),
+            annotations: Default::default(),
             functions: IndexMap::new(),
             package: None,
         })
@@ -336,6 +337,7 @@ impl<'a> Resolver<'a> {
             includes: Default::default(),
             include_names: Default::default(),
             stability: Default::default(),
+            annotations: Default::default(),
         })
     }
 
@@ -433,7 +435,7 @@ impl<'a> Resolver<'a> {
 
             // With this file's namespace information look at all `use` paths
             // and record dependencies between interfaces.
-            decl_list.for_each_path(&mut |iface, _attrs, path, _names, _| {
+            decl_list.for_each_path(&mut |iface, _attrs, _annos, path, _names, _| {
                 // If this import isn't contained within an interface then it's
                 // in a world and it doesn't need to participate in our
                 // topo-sort.
@@ -561,12 +563,13 @@ impl<'a> Resolver<'a> {
     fn populate_foreign_types(&mut self, decl_lists: &[ast::DeclList<'a>]) -> Result<()> {
         for (i, decl_list) in decl_lists.iter().enumerate() {
             self.cur_ast_index = i;
-            decl_list.for_each_path(&mut |_, attrs, path, names, _| {
+            decl_list.for_each_path(&mut |_, attrs, annos, path, names, _| {
                 let names = match names {
                     Some(names) => names,
                     None => return Ok(()),
                 };
                 let stability = self.stability(attrs)?;
+                let annotations = self.annotations(annos)?;
                 let (item, name, span) = self.resolve_ast_item_path(path)?;
                 let iface = self.extract_iface_from_item(&item, &name, span)?;
                 if !self.foreign_interfaces.contains(&iface) {
@@ -584,6 +587,7 @@ impl<'a> Resolver<'a> {
                     let id = self.types.alloc(TypeDef {
                         docs: Docs::default(),
                         stability: stability.clone(),
+                        annotations: annotations.clone(), // TODO should maybe use empty annotations here
                         kind: TypeDefKind::Unknown,
                         name: Some(name.name.name.to_string()),
                         owner: TypeOwner::Interface(iface),
@@ -607,6 +611,8 @@ impl<'a> Resolver<'a> {
         self.worlds[world_id].docs = docs;
         let stability = self.stability(&world.attributes)?;
         self.worlds[world_id].stability = stability;
+        let annotations = self.annotations(&world.annotations)?;
+        self.worlds[world_id].annotations = annotations;
 
         self.resolve_types(
             TypeOwner::World(world_id),
@@ -651,10 +657,11 @@ impl<'a> Resolver<'a> {
         let mut imported_interfaces = HashSet::new();
         let mut exported_interfaces = HashSet::new();
         for item in world.items.iter() {
-            let (docs, attrs, kind, desc, spans, interfaces) = match item {
+            let (docs, attrs, annos, kind, desc, spans, interfaces) = match item {
                 ast::WorldItem::Import(import) => (
                     &import.docs,
                     &import.attributes,
+                    &import.annotations,
                     &import.kind,
                     "import",
                     &mut import_spans,
@@ -663,6 +670,7 @@ impl<'a> Resolver<'a> {
                 ast::WorldItem::Export(export) => (
                     &export.docs,
                     &export.attributes,
+                    &export.annotations,
                     &export.kind,
                     "export",
                     &mut export_spans,
@@ -694,7 +702,7 @@ impl<'a> Resolver<'a> {
                 }
             };
 
-            let world_item = self.resolve_world_item(docs, attrs, kind)?;
+            let world_item = self.resolve_world_item(docs, attrs, annos, kind)?;
             let key = match kind {
                 // Interfaces are always named exactly as they are in the WIT.
                 ast::ExternKind::Interface(name, _) => WorldKey::Name(name.name.to_string()),
@@ -758,6 +766,7 @@ impl<'a> Resolver<'a> {
         &mut self,
         docs: &ast::Docs<'a>,
         attrs: &[ast::Attribute<'a>],
+        annos: &[ast::Annotation<'a>],
         kind: &ast::ExternKind<'a>,
     ) -> Result<WorldItem> {
         match kind {
@@ -767,13 +776,15 @@ impl<'a> Resolver<'a> {
                 self.resolve_interface(id, items, docs, attrs)?;
                 self.type_lookup = prev;
                 let stability = self.interfaces[id].stability.clone();
-                Ok(WorldItem::Interface { id, stability })
+                let annotations = self.interfaces[id].annotations.clone();
+                Ok(WorldItem::Interface { id, stability, annotations })
             }
             ast::ExternKind::Path(path) => {
                 let stability = self.stability(attrs)?;
+                let annotations = self.annotations(annos)?;
                 let (item, name, span) = self.resolve_ast_item_path(path)?;
                 let id = self.extract_iface_from_item(&item, &name, span)?;
-                Ok(WorldItem::Interface { id, stability })
+                Ok(WorldItem::Interface { id, stability, annotations })
             }
             ast::ExternKind::Func(name, func) => {
                 let prefix = if func.async_ { "[async]" } else { "" };
@@ -781,6 +792,7 @@ impl<'a> Resolver<'a> {
                 let func = self.resolve_function(
                     docs,
                     attrs,
+                    annos,
                     &name,
                     func,
                     if func.async_ {
@@ -838,6 +850,7 @@ impl<'a> Resolver<'a> {
                     funcs.push(self.resolve_function(
                         &f.docs,
                         &f.attributes,
+                        &f.annotations,
                         &name,
                         &f.func,
                         if f.func.async_ {
@@ -936,10 +949,12 @@ impl<'a> Resolver<'a> {
             };
             let docs = self.docs(&def.docs);
             let stability = self.stability(&def.attributes)?;
+            let annotations = self.annotations(&def.annotations)?;
             let kind = self.resolve_type_def(&def.ty, &stability)?;
             let id = self.types.alloc(TypeDef {
                 docs,
                 stability,
+                annotations,
                 kind,
                 name: Some(def.name.name.to_string()),
                 owner,
@@ -974,6 +989,7 @@ impl<'a> Resolver<'a> {
         let (item, name, span) = self.resolve_ast_item_path(&u.from)?;
         let use_from = self.extract_iface_from_item(&item, &name, span)?;
         let stability = self.stability(&u.attributes)?;
+        let annotations = self.annotations(&u.annotations)?;
 
         for name in u.names.iter() {
             let lookup = &self.interface_types[use_from.index()];
@@ -995,6 +1011,7 @@ impl<'a> Resolver<'a> {
             let id = self.types.alloc(TypeDef {
                 docs: Docs::default(),
                 stability: stability.clone(),
+                annotations: Annotations::default(),  // TODO: check if types should inherit annotations from `use`
                 kind: TypeDefKind::Type(Type::Id(id)),
                 name: Some(name.name.to_string()),
                 owner,
@@ -1007,11 +1024,12 @@ impl<'a> Resolver<'a> {
     /// For each name in the `include`, resolve the path of the include, add it to the self.includes
     fn resolve_include(&mut self, world_id: WorldId, i: &ast::Include<'a>) -> Result<()> {
         let stability = self.stability(&i.attributes)?;
+        let annotations = self.annotations(&i.annotations)?;
         let (item, name, span) = self.resolve_ast_item_path(&i.from)?;
         let include_from = self.extract_world_from_item(&item, &name, span)?;
         self.worlds[world_id]
             .includes
-            .push((stability, include_from));
+            .push((stability, annotations, include_from));
         self.worlds[world_id].include_names.push(
             i.names
                 .iter()
@@ -1065,6 +1083,7 @@ impl<'a> Resolver<'a> {
         self.resolve_function(
             &named_func.docs,
             &named_func.attributes,
+            &named_func.annotations,
             &name,
             &named_func.func,
             kind,
@@ -1075,17 +1094,20 @@ impl<'a> Resolver<'a> {
         &mut self,
         docs: &ast::Docs<'_>,
         attrs: &[ast::Attribute<'_>],
+        annos: &[ast::Annotation<'_>],
         name: &str,
         func: &ast::Func,
         kind: FunctionKind,
     ) -> Result<Function> {
         let docs = self.docs(docs);
         let stability = self.stability(attrs)?;
+        let annotations = self.annotations(annos)?;
         let params = self.resolve_params(&func.params, &kind, func.span)?;
         let result = self.resolve_result(&func.result, &kind, func.span)?;
         Ok(Function {
             docs,
             stability,
+            annotations,
             name: name.to_string(),
             kind,
             params,
@@ -1417,6 +1439,7 @@ impl<'a> Resolver<'a> {
                 name: None,
                 docs: Docs::default(),
                 stability,
+                annotations: Annotations::default(),
                 owner: TypeOwner::None,
             },
             ty.span(),
@@ -1531,6 +1554,27 @@ impl<'a> Resolver<'a> {
         };
         Docs { contents }
     }
+    
+    fn annotations(&mut self, annos: &[ast::Annotation<'_>]) -> Result<Annotations> {
+        let mut annotations = Annotations::new();
+        
+        for annotation in annos {
+            let mut map: HashMap<String, String> = HashMap::new();
+            
+            for (key, value) in &annotation.fields {
+                let entry = map.entry(key.to_string());
+                
+                match entry {
+                    std::collections::hash_map::Entry::Occupied(_) => return Err(anyhow::Error::msg("Cannot accept two of the same key in an annotation")),
+                    std::collections::hash_map::Entry::Vacant(vacant_entry) => vacant_entry.insert(value.to_string())
+                };
+            }
+            
+            annotations.push((annotation.name.to_string(), map));
+        }
+        
+        Ok(annotations)
+    }
 
     fn stability(&mut self, attrs: &[ast::Attribute<'_>]) -> Result<Stability> {
         match attrs {
@@ -1622,6 +1666,7 @@ impl<'a> Resolver<'a> {
                     TypeDef {
                         docs: Docs::default(),
                         stability,
+                        annotations: Annotations::default(),
                         kind,
                         name: None,
                         owner: TypeOwner::None,

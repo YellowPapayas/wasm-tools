@@ -4,6 +4,7 @@ use id_arena::{Arena, Id};
 use indexmap::IndexMap;
 use semver::Version;
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
@@ -419,10 +420,16 @@ pub struct World {
         serde(skip_serializing_if = "Stability::is_unknown")
     )]
     pub stability: Stability,
+    /// Annotations attribute for this world.
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 
     /// All the included worlds from this world. Empty if this is fully resolved
     #[cfg_attr(feature = "serde", serde(skip))]
-    pub includes: Vec<(Stability, WorldId)>,
+    pub includes: Vec<(Stability, Annotations, WorldId)>,  
 
     /// All the included worlds names. Empty if this is fully resolved
     #[cfg_attr(feature = "serde", serde(skip))]
@@ -539,6 +546,13 @@ pub enum WorldItem {
             serde(skip_serializing_if = "Stability::is_unknown")
         )]
         stability: Stability,
+        
+        /// Annotations attribute for this interface.
+        #[cfg_attr(
+            feature = "serde",
+            serde(skip_serializing_if = "Annotations::is_empty")
+        )]
+        annotations: Annotations,
     },
 
     /// A function is being directly imported or exported from this world.
@@ -589,6 +603,13 @@ pub struct Interface {
         serde(skip_serializing_if = "Stability::is_unknown")
     )]
     pub stability: Stability,
+    
+    /// Annotations attribute for this interface.
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 
     /// The package that owns this interface.
     #[cfg_attr(feature = "serde", serde(serialize_with = "serialize_optional_id"))]
@@ -609,6 +630,13 @@ pub struct TypeDef {
         serde(skip_serializing_if = "Stability::is_unknown")
     )]
     pub stability: Stability,
+    
+    /// Annotations attribute for this type.
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
@@ -869,6 +897,13 @@ pub struct Function {
         serde(skip_serializing_if = "Stability::is_unknown")
     )]
     pub stability: Stability,
+    
+    /// Annotations attribute for this interface.
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1297,6 +1332,9 @@ fn find_futures_and_streams(resolve: &Resolve, ty: Type, results: &mut Vec<TypeI
     }
 }
 
+// pub type Annotations = HashMap<String, Vec<(String, String)>>;
+pub type Annotations = Vec<(String, HashMap<String, String>)>;
+
 /// Representation of the stability attributes associated with a world,
 /// interface, function, or type.
 ///
@@ -1396,6 +1434,7 @@ mod test {
             owner: TypeOwner::None,
             docs: Docs::default(),
             stability: Stability::Unknown,
+            annotations: annotations::default()
         });
         let t1 = resolve.types.alloc(TypeDef {
             name: None,
@@ -1403,6 +1442,7 @@ mod test {
             owner: TypeOwner::None,
             docs: Docs::default(),
             stability: Stability::Unknown,
+            annotations: annotations::default()
         });
         let t2 = resolve.types.alloc(TypeDef {
             name: None,
@@ -1410,6 +1450,7 @@ mod test {
             owner: TypeOwner::None,
             docs: Docs::default(),
             stability: Stability::Unknown,
+            annotations: annotations::default()
         });
         let found = Function {
             name: "foo".into(),
@@ -1418,6 +1459,7 @@ mod test {
             result: Some(Type::Id(t2)),
             docs: Docs::default(),
             stability: Stability::Unknown,
+            annotations: annotations::default()
         }
         .find_futures_and_streams(&resolve);
         assert_eq!(3, found.len());

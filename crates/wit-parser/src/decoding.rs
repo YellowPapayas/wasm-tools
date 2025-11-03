@@ -310,6 +310,7 @@ impl ComponentInfo {
             includes: Default::default(),
             include_names: Default::default(),
             stability: Default::default(),
+            stability: Default::default(),
         });
         let mut package = Package {
             // Similar to `world_name` above this is arbitrarily chosen as it's
