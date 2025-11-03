@@ -1145,6 +1145,10 @@ impl<O: Output> WitPrinter<O> {
                     self.output.newline();
                 }
             }
+            Stability::Annotated { .. } => {
+                // Annotations are language-specific and handled by code generators
+                // No stability metadata needed in component format
+            }
         }
     }
 }
