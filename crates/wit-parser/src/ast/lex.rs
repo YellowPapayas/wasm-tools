@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::{Result, bail, Context};
 use std::char;
 use std::fmt;
 use std::str;
@@ -183,8 +183,8 @@ impl<'a> Tokenizer<'a> {
         let content = token.strip_prefix('"')
             .and_then(|s| s.strip_suffix('"'))
             .or_else(|| token.strip_prefix('`').and_then(|s| s.strip_suffix('`')))
-            .unwrap();
-        Ok(content)
+            .context("Could not parse string");
+        content
     }
 
     pub fn next(&mut self) -> Result<Option<(Span, Token)>, Error> {
