@@ -5,6 +5,7 @@ interface foo {
   #rust(derive = "Serialize, Deserialize")  // #[derive(Serialize, Deserialize)
   #rust(derive = "Debug")                   // #[derive(Debug)
   #python(decorate = "pyserde")             // @pyserde
+  #rust(serde = `rename_all = “camelCase”`)
   #whatever()
   x: func(y: string);
 }
