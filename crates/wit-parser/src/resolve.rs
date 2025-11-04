@@ -2888,6 +2888,7 @@ impl Remap {
                     owner: TypeOwner::None,
                     kind: TypeDefKind::Handle(Handle::Own(id)),
                     docs: _,
+                    annotations: _,
                     stability: _,
                 } => *self.own_handles.entry(id).or_insert(new_id),
 
@@ -3369,6 +3370,7 @@ impl Remap {
                     owner: TypeOwner::None,
                     kind: TypeDefKind::Handle(Handle::Own(*id)),
                     docs: Default::default(),
+                    annotations: Default::default(),
                     stability: Default::default(),
                 })
             });

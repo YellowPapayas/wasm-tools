@@ -32,6 +32,7 @@ pub struct Span {
 pub enum Token {
     Whitespace,
     Comment,
+    Annotation,
 
     Equals,
     Comma,
@@ -221,6 +222,14 @@ impl<'a> Tokenizer<'a> {
                 } else {
                     Slash
                 }
+            }
+            '#' => {
+                for (_, ch) in &mut self.chars {
+                    if ch == '\n' {
+                        break;
+                    }
+                }
+                Annotation
             }
             '=' => Equals,
             ',' => Comma,
@@ -518,6 +527,7 @@ impl Token {
         match self {
             Whitespace => "whitespace",
             Comment => "a comment",
+            Annotation => "an annotation",
             Equals => "'='",
             Comma => "','",
             Colon => "':'",

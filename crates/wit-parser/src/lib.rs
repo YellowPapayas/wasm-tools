@@ -413,6 +413,13 @@ pub struct World {
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
 
+    /// Annotations associated with this world declaration.
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
+
     /// Stability annotation for this world itself.
     #[cfg_attr(
         feature = "serde",
@@ -583,6 +590,13 @@ pub struct Interface {
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
 
+    /// Annotations associated with this interface.
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
+
     /// Stability attribute for this interface.
     #[cfg_attr(
         feature = "serde",
@@ -603,6 +617,11 @@ pub struct TypeDef {
     pub owner: TypeOwner,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
     /// Stability attribute for this type.
     #[cfg_attr(
         feature = "serde",
@@ -730,6 +749,11 @@ pub struct Field {
     pub ty: Type,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
@@ -744,6 +768,11 @@ pub struct Flag {
     pub name: String,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -794,6 +823,11 @@ pub struct Case {
     pub ty: Option<Type>,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 impl Variant {
@@ -814,6 +848,11 @@ pub struct EnumCase {
     pub name: String,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 impl Enum {
@@ -852,6 +891,18 @@ impl Docs {
     }
 }
 
+#[derive(Clone, Default, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub struct Annotations {
+    pub contents: Vec<String>,
+}
+
+impl Annotations {
+    pub fn is_empty(&self) -> bool {
+        self.contents.is_empty()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Function {
@@ -863,6 +914,11 @@ pub struct Function {
     pub result: Option<Type>,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
     /// Stability attribute for this function.
     #[cfg_attr(
         feature = "serde",
@@ -1391,6 +1447,7 @@ mod test {
             kind: TypeDefKind::Future(Some(Type::U32)),
             owner: TypeOwner::None,
             docs: Docs::default(),
+            annotations: Annotations::default(),
             stability: Stability::Unknown,
         });
         let t1 = resolve.types.alloc(TypeDef {
@@ -1398,6 +1455,7 @@ mod test {
             kind: TypeDefKind::Future(Some(Type::Id(t0))),
             owner: TypeOwner::None,
             docs: Docs::default(),
+            annotations: Annotations::default(),
             stability: Stability::Unknown,
         });
         let t2 = resolve.types.alloc(TypeDef {
@@ -1405,6 +1463,7 @@ mod test {
             kind: TypeDefKind::Stream(Some(Type::U32)),
             owner: TypeOwner::None,
             docs: Docs::default(),
+            annotations: Annotations::default(),
             stability: Stability::Unknown,
         });
         let found = Function {
@@ -1413,6 +1472,7 @@ mod test {
             params: vec![("p1".into(), Type::Id(t1)), ("p2".into(), Type::U32)],
             result: Some(Type::Id(t2)),
             docs: Docs::default(),
+            annotations: Annotations::default(),
             stability: Stability::Unknown,
         }
         .find_futures_and_streams(&resolve);

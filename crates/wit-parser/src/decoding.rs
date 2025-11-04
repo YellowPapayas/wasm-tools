@@ -304,6 +304,7 @@ impl ComponentInfo {
         let world = decoder.resolve.worlds.alloc(World {
             name: world_name.to_string(),
             docs: Default::default(),
+            annotations: Default::default(),
             imports: Default::default(),
             exports: Default::default(),
             package: None,
@@ -895,6 +896,7 @@ impl WitPackageDecoder<'_> {
                 self.resolve.interfaces.alloc(Interface {
                     name: Some(name.interface().to_string()),
                     docs: Default::default(),
+                    annotations: Default::default(),
                     types: IndexMap::default(),
                     functions: IndexMap::new(),
                     package: None,
@@ -950,6 +952,7 @@ impl WitPackageDecoder<'_> {
         let mut interface = Interface {
             name: interface_name.clone(),
             docs: Default::default(),
+            annotations: Default::default(),
             types: IndexMap::default(),
             functions: IndexMap::new(),
             package: None,
@@ -1048,6 +1051,7 @@ impl WitPackageDecoder<'_> {
             name: Some(name.to_string()),
             kind,
             docs: Default::default(),
+            annotations: Default::default(),
             stability: Default::default(),
             owner,
         });
@@ -1081,6 +1085,7 @@ impl WitPackageDecoder<'_> {
         let mut world = World {
             name: name.clone(),
             docs: Default::default(),
+            annotations: Default::default(),
             imports: Default::default(),
             exports: Default::default(),
             includes: Default::default(),
@@ -1196,6 +1201,7 @@ impl WitPackageDecoder<'_> {
         };
         Ok(Function {
             docs: Default::default(),
+            annotations: Default::default(),
             stability: Default::default(),
             kind: match name.kind() {
                 ComponentNameKind::Label(_) => FunctionKind::Freestanding,
@@ -1274,6 +1280,7 @@ impl WitPackageDecoder<'_> {
         let ty = self.resolve.types.alloc(TypeDef {
             name: None,
             docs: Default::default(),
+            annotations: Default::default(),
             stability: Default::default(),
             owner: TypeOwner::None,
             kind,
@@ -1337,6 +1344,7 @@ impl WitPackageDecoder<'_> {
                                 format!("failed to convert record field '{name}'")
                             })?,
                             docs: Default::default(),
+                            annotations: Default::default(),
                         })
                     })
                     .collect::<Result<_>>()?;
@@ -1358,6 +1366,7 @@ impl WitPackageDecoder<'_> {
                                 None => None,
                             },
                             docs: Default::default(),
+                            annotations: Default::default(),
                         })
                     })
                     .collect::<Result<_>>()?;
@@ -1370,6 +1379,7 @@ impl WitPackageDecoder<'_> {
                     .map(|name| Flag {
                         name: name.to_string(),
                         docs: Default::default(),
+                        annotations: Default::default(),
                     })
                     .collect();
                 Ok(TypeDefKind::Flags(Flags { flags }))
@@ -1382,6 +1392,7 @@ impl WitPackageDecoder<'_> {
                     .map(|name| EnumCase {
                         name: name.into(),
                         docs: Default::default(),
+                        annotations: Default::default(),
                     })
                     .collect();
                 Ok(TypeDefKind::Enum(Enum { cases }))
