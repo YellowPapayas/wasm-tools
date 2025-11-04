@@ -173,15 +173,16 @@ impl<'a> Tokenizer<'a> {
         Ok(id_part)
     }
 
-    /// Parses a string literal and returns the content between the quotes.
+    /// Parses a string literal and returns the content between the quotes or backticks.
     ///
     /// This function extracts the raw string content without processing escape sequences.
     /// The content can span multiple lines.
     pub fn parse_string(&self, span: Span) -> Result<&'a str> {
         let token = self.get_span(span);
-        // Strip leading and trailing quotes
+        // Strip leading and trailing quotes or backticks
         let content = token.strip_prefix('"')
             .and_then(|s| s.strip_suffix('"'))
+            .or_else(|| token.strip_prefix('`').and_then(|s| s.strip_suffix('`')))
             .unwrap();
         Ok(content)
     }
@@ -365,6 +366,26 @@ impl<'a> Tokenizer<'a> {
                         }
                         None => {
                             // End of input without closing quote
+                            return Err(Error::UnterminatedString(start));
+                        }
+                    }
+                }
+                StringLiteral
+            }
+
+            '`' => {
+                // parse backtick string literal, no escape sequence handling, multiline allowed
+                let mut iter = self.chars.clone();
+                loop {
+                    match iter.next() {
+                        Some((_, '`')) => {
+                            self.chars = iter;
+                            break;
+                        }
+                        Some(_) => {
+                            self.chars = iter.clone();
+                        }
+                        None => {
                             return Err(Error::UnterminatedString(start));
                         }
                     }
