@@ -15,8 +15,7 @@
 //! format to store this information inline.
 
 use crate::{
-    Docs, Function, InterfaceId, PackageId, Resolve, Stability, TypeDefKind, TypeId, WorldId,
-    WorldItem, WorldKey,
+    Annotations, Docs, Function, InterfaceId, PackageId, Resolve, Stability, TypeDefKind, TypeId, WorldId, WorldItem, WorldKey
 };
 use anyhow::{Result, bail};
 use indexmap::IndexMap;
@@ -174,6 +173,11 @@ struct WorldMetadata {
         serde(default, skip_serializing_if = "Stability::is_unknown")
     )]
     stability: Stability,
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Annotations::is_empty")
+    )]
+    annotations: Annotations,
 
     /// Metadata for named interface, e.g.:
     ///
@@ -348,6 +352,7 @@ impl WorldMetadata {
         Self {
             docs: world.docs.contents.clone(),
             stability: world.stability.clone(),
+            annotations: world.annotations.clone(),
             interface_imports_or_exports,
             types,
             func_imports_or_exports,
@@ -378,10 +383,11 @@ impl WorldMetadata {
                     None => world.exports.get_mut(&key),
                 }
             };
-            let Some(WorldItem::Interface { id, stability }) = item else {
+            let Some(WorldItem::Interface { id, stability, annotations }) = item else {
                 bail!("missing interface {name:?}");
             };
             *stability = data.stability.clone();
+            *annotations = data.annotations.clone(); // TODO double check this
             let id = *id;
             data.inject(resolve, id)?;
         }
@@ -471,6 +477,7 @@ impl WorldMetadata {
             && self.types.is_empty()
             && self.func_imports_or_exports.is_empty()
             && self.stability.is_unknown()
+            && self.annotations.is_empty()
             && self.interface_exports.is_empty()
             && self.func_exports.is_empty()
             && self.interface_import_stability.is_empty()
@@ -480,6 +487,7 @@ impl WorldMetadata {
     #[cfg(feature = "serde")]
     fn is_compatible_with_v0(&self) -> bool {
         self.stability.is_unknown()
+            && self.annotations.is_empty()
             && self
                 .interface_imports_or_exports
                 .iter()
@@ -513,6 +521,11 @@ struct InterfaceMetadata {
     stability: Stability,
     #[cfg_attr(
         feature = "serde",
+        serde(default, skip_serializing_if = "Annotations::is_empty")
+    )]
+    annotations: Annotations,
+    #[cfg_attr(
+        feature = "serde",
         serde(default, skip_serializing_if = "StringMap::is_empty")
     )]
     funcs: StringMap<FunctionMetadata>,
@@ -543,6 +556,7 @@ impl InterfaceMetadata {
         Self {
             docs: interface.docs.contents.clone(),
             stability: interface.stability.clone(),
+            annotations: interface.annotations.clone(),
             funcs,
             types,
         }
@@ -566,6 +580,7 @@ impl InterfaceMetadata {
             interface.docs.contents = Some(docs.to_string());
         }
         interface.stability = self.stability.clone();
+        interface.annotations = self.annotations.clone();
         Ok(())
     }
 
@@ -574,11 +589,13 @@ impl InterfaceMetadata {
             && self.funcs.is_empty()
             && self.types.is_empty()
             && self.stability.is_unknown()
+            && self.annotations.is_empty()
     }
 
     #[cfg(feature = "serde")]
     fn is_compatible_with_v0(&self) -> bool {
         self.stability.is_unknown()
+            && self.annotations.is_empty()
             && self.funcs.iter().all(|(_, w)| w.is_compatible_with_v0())
             && self.types.iter().all(|(_, w)| w.is_compatible_with_v0())
     }
@@ -597,7 +614,7 @@ enum FunctionMetadata {
 
     /// In the v1+ format we're tracking at least docs but also the stability
     /// of functions.
-    DocsAndStabilty {
+    DocsStabilityAnnotations {
         #[cfg_attr(
             feature = "serde",
             serde(default, skip_serializing_if = "Option::is_none")
@@ -608,17 +625,23 @@ enum FunctionMetadata {
             serde(default, skip_serializing_if = "Stability::is_unknown")
         )]
         stability: Stability,
+        #[cfg_attr(
+            feature = "serde",
+            serde(default, skip_serializing_if = "Annotations::is_empty")
+        )]
+        annotations: Annotations,
     },
 }
 
 impl FunctionMetadata {
     fn extract(func: &Function) -> Self {
-        if TRY_TO_EMIT_V0_BY_DEFAULT && func.stability.is_unknown() {
+        if TRY_TO_EMIT_V0_BY_DEFAULT && (func.stability.is_unknown() || func.annotations.is_empty() ){
             FunctionMetadata::JustDocs(func.docs.contents.clone())
         } else {
-            FunctionMetadata::DocsAndStabilty {
+            FunctionMetadata::DocsStabilityAnnotations {
                 docs: func.docs.contents.clone(),
                 stability: func.stability.clone(),
+                annotations: func.annotations.clone(),
             }
         }
     }
@@ -628,9 +651,10 @@ impl FunctionMetadata {
             FunctionMetadata::JustDocs(docs) => {
                 func.docs.contents = docs.clone();
             }
-            FunctionMetadata::DocsAndStabilty { docs, stability } => {
+            FunctionMetadata::DocsStabilityAnnotations { docs, stability, annotations } => {
                 func.docs.contents = docs.clone();
                 func.stability = stability.clone();
+                func.annotations = annotations.clone();
             }
         }
         Ok(())
@@ -639,8 +663,8 @@ impl FunctionMetadata {
     fn is_empty(&self) -> bool {
         match self {
             FunctionMetadata::JustDocs(docs) => docs.is_none(),
-            FunctionMetadata::DocsAndStabilty { docs, stability } => {
-                docs.is_none() && stability.is_unknown()
+            FunctionMetadata::DocsStabilityAnnotations { docs, stability, annotations } => {
+                docs.is_none() && stability.is_unknown() && annotations.is_empty()
             }
         }
     }
@@ -649,7 +673,7 @@ impl FunctionMetadata {
     fn is_compatible_with_v0(&self) -> bool {
         match self {
             FunctionMetadata::JustDocs(_) => true,
-            FunctionMetadata::DocsAndStabilty { .. } => false,
+            FunctionMetadata::DocsStabilityAnnotations { .. } => false,
         }
     }
 }
@@ -667,6 +691,11 @@ struct TypeMetadata {
         serde(default, skip_serializing_if = "Stability::is_unknown")
     )]
     stability: Stability,
+    #[cfg_attr(
+        feature = "serde",
+        serde(default, skip_serializing_if = "Annotations::is_empty")
+    )]
+    annotations: Annotations,
     // record fields, variant cases, etc.
     #[cfg_attr(
         feature = "serde",
@@ -707,6 +736,7 @@ impl TypeMetadata {
         Self {
             docs: ty.docs.contents.clone(),
             stability: ty.stability.clone(),
+            annotations: ty.annotations.clone(),
             items,
         }
     }
@@ -736,6 +766,7 @@ impl TypeMetadata {
             ty.docs.contents = Some(docs.to_string());
         }
         ty.stability = self.stability.clone();
+        ty.annotations = self.annotations.clone();
         Ok(())
     }
 
@@ -763,10 +794,11 @@ impl TypeMetadata {
 
     fn is_empty(&self) -> bool {
         self.docs.is_none() && self.items.is_empty() && self.stability.is_unknown()
+            && self.annotations.is_empty()
     }
 
     #[cfg(feature = "serde")]
     fn is_compatible_with_v0(&self) -> bool {
-        self.stability.is_unknown()
+        self.stability.is_unknown() && self.annotations.is_empty()
     }
 }

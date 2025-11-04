@@ -26,6 +26,30 @@
               "name": "y",
               "type": "string"
             }
+          ],
+          "annotations": [
+            [
+              "rust",
+              {
+                "derive": "Serialize, Deserialize"
+              }
+            ],
+            [
+              "rust",
+              {
+                "derive": "Debug"
+              }
+            ],
+            [
+              "python",
+              {
+                "decorate": "pyserde"
+              }
+            ],
+            [
+              "whatever",
+              {}
+            ]
           ]
         }
       },

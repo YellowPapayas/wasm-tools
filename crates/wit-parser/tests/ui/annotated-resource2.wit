@@ -2,7 +2,8 @@ package a:b@0.1.0;
 
 interface foo {
 
-  #rust(derive = "Serialize, Deserialize", derive = "Debug")  // #[derive(Serialize, Deserialize, Debug)
+  #rust(derive = "Serialize, Deserialize")  // #[derive(Serialize, Deserialize)
+  #rust(derive = "Debug")                   // #[derive(Debug)
   #python(decorate = "pyserde")             // @pyserde
   #whatever()
   x: func(y: string);

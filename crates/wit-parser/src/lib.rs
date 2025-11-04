@@ -1434,7 +1434,7 @@ mod test {
             owner: TypeOwner::None,
             docs: Docs::default(),
             stability: Stability::Unknown,
-            annotations: annotations::default()
+            annotations: Annotations::default()
         });
         let t1 = resolve.types.alloc(TypeDef {
             name: None,
@@ -1442,7 +1442,7 @@ mod test {
             owner: TypeOwner::None,
             docs: Docs::default(),
             stability: Stability::Unknown,
-            annotations: annotations::default()
+            annotations: Annotations::default()
         });
         let t2 = resolve.types.alloc(TypeDef {
             name: None,
@@ -1450,7 +1450,7 @@ mod test {
             owner: TypeOwner::None,
             docs: Docs::default(),
             stability: Stability::Unknown,
-            annotations: annotations::default()
+            annotations: Annotations::default()
         });
         let found = Function {
             name: "foo".into(),
@@ -1459,7 +1459,7 @@ mod test {
             result: Some(Type::Id(t2)),
             docs: Docs::default(),
             stability: Stability::Unknown,
-            annotations: annotations::default()
+            annotations: Annotations::default()
         }
         .find_futures_and_streams(&resolve);
         assert_eq!(3, found.len());

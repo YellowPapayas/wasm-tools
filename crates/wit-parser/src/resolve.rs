@@ -17,10 +17,7 @@ use crate::ast::{ParsedUsePath, parse_use_path};
 #[cfg(feature = "serde")]
 use crate::serde_::{serialize_arena, serialize_id_map};
 use crate::{
-    AstItem, Docs, Error, Function, FunctionKind, Handle, IncludeName, Interface, InterfaceId,
-    InterfaceSpan, LiftLowerAbi, ManglingAndAbi, PackageName, PackageNotFoundError, SourceMap,
-    Stability, Type, TypeDef, TypeDefKind, TypeId, TypeIdVisitor, TypeOwner, UnresolvedPackage,
-    UnresolvedPackageGroup, World, WorldId, WorldItem, WorldKey, WorldSpan,
+    Annotations, AstItem, Docs, Error, Function, FunctionKind, Handle, IncludeName, Interface, InterfaceId, InterfaceSpan, LiftLowerAbi, ManglingAndAbi, PackageName, PackageNotFoundError, SourceMap, Stability, Type, TypeDef, TypeDefKind, TypeId, TypeIdVisitor, TypeOwner, UnresolvedPackage, UnresolvedPackageGroup, World, WorldId, WorldItem, WorldKey, WorldSpan
 };
 
 pub use clone::CloneMaps;
@@ -837,15 +834,18 @@ package {name} is defined in two different locations:\n\
                             WorldItem::Interface {
                                 id: aid,
                                 stability: astability,
+                                annotations: aannotations
                             },
                             WorldItem::Interface {
                                 id: bid,
                                 stability: bstability,
+                                annotations: bannotations
                             },
                         ) => {
                             let aid = interface_map.get(aid).copied().unwrap_or(*aid);
                             assert_eq!(aid, *bid);
                             update_stability(astability, bstability)?;
+                            update_annotations(aannotations, bannotations)?;
                             Ok(())
                         }
                         _ => unreachable!(),
@@ -2064,8 +2064,8 @@ package {name} is defined in two different locations:\n\
             match item {
                 // Interfaces get their dependencies added first followed by the
                 // interface itself.
-                WorldItem::Interface { id, stability } => {
-                    self.elaborate_world_import(&mut new_imports, name.clone(), *id, &stability);
+                WorldItem::Interface { id, stability, annotations } => {
+                    self.elaborate_world_import(&mut new_imports, name.clone(), *id, &stability, &annotations);
                 }
 
                 // Functions are added as-is since their dependence on types in
@@ -2085,6 +2085,7 @@ package {name} is defined in two different locations:\n\
                             WorldKey::Interface(dep),
                             dep,
                             &self.types[*id].stability,
+                            &self.types[*id].annotations,
                         );
                     }
                     let prev = new_imports.insert(name.clone(), item.clone());
@@ -2102,8 +2103,8 @@ package {name} is defined in two different locations:\n\
         let mut export_interfaces = IndexMap::new();
         for (name, item) in world.exports.iter() {
             match item {
-                WorldItem::Interface { id, stability } => {
-                    let prev = export_interfaces.insert(*id, (name.clone(), stability));
+                WorldItem::Interface { id, stability, annotations} => {
+                    let prev = export_interfaces.insert(*id, (name.clone(), stability, annotations));
                     assert!(prev.is_none());
                 }
                 WorldItem::Function(_) => {
@@ -2138,18 +2139,20 @@ package {name} is defined in two different locations:\n\
         key: WorldKey,
         id: InterfaceId,
         stability: &Stability,
+        annotations: &Annotations
     ) {
         if imports.contains_key(&key) {
             return;
         }
         for dep in self.interface_direct_deps(id) {
-            self.elaborate_world_import(imports, WorldKey::Interface(dep), dep, stability);
+            self.elaborate_world_import(imports, WorldKey::Interface(dep), dep, stability, annotations);
         }
         let prev = imports.insert(
             key,
             WorldItem::Interface {
                 id,
                 stability: stability.clone(),
+                annotations: annotations.clone()
             },
         );
         assert!(prev.is_none());
@@ -2203,12 +2206,12 @@ package {name} is defined in two different locations:\n\
     /// operation fails.
     fn elaborate_world_exports(
         &self,
-        export_interfaces: &IndexMap<InterfaceId, (WorldKey, &Stability)>,
+        export_interfaces: &IndexMap<InterfaceId, (WorldKey, &Stability, &Annotations)>,
         imports: &mut IndexMap<WorldKey, WorldItem>,
         exports: &mut IndexMap<WorldKey, WorldItem>,
     ) -> Result<()> {
         let mut required_imports = HashSet::new();
-        for (id, (key, stability)) in export_interfaces.iter() {
+        for (id, (key, stability, annotations)) in export_interfaces.iter() {
             let name = self.name_world_key(&key);
             let ok = add_world_export(
                 self,
@@ -2220,6 +2223,7 @@ package {name} is defined in two different locations:\n\
                 key,
                 true,
                 stability,
+                annotations,
             );
             if !ok {
                 bail!(
@@ -2250,12 +2254,13 @@ package {name} is defined in two different locations:\n\
             resolve: &Resolve,
             imports: &mut IndexMap<WorldKey, WorldItem>,
             exports: &mut IndexMap<WorldKey, WorldItem>,
-            export_interfaces: &IndexMap<InterfaceId, (WorldKey, &Stability)>,
+            export_interfaces: &IndexMap<InterfaceId, (WorldKey, &Stability, &Annotations)>,
             required_imports: &mut HashSet<InterfaceId>,
             id: InterfaceId,
             key: &WorldKey,
             add_export: bool,
             stability: &Stability,
+            annotations: &Annotations
         ) -> bool {
             if exports.contains_key(key) {
                 if add_export {
@@ -2282,6 +2287,7 @@ package {name} is defined in two different locations:\n\
                     &key,
                     add_export,
                     stability,
+                    annotations,
                 )
             });
             if !ok {
@@ -2290,6 +2296,7 @@ package {name} is defined in two different locations:\n\
             let item = WorldItem::Interface {
                 id,
                 stability: stability.clone(),
+                annotations: annotations.clone()
             };
             if add_export {
                 if required_imports.contains(&id) {
@@ -2379,10 +2386,12 @@ package {name} is defined in two different locations:\n\
                 &WorldItem::Interface {
                     id: *to_replace,
                     stability: Default::default(),
+                    annotations: Default::default()
                 },
                 &WorldItem::Interface {
                     id: *replace_with,
                     stability: Default::default(),
+                    annotations: Default::default()
                 },
             )
             .with_context(|| {
@@ -2892,6 +2901,7 @@ impl Remap {
                     kind: TypeDefKind::Handle(Handle::Own(id)),
                     docs: _,
                     stability: _,
+                    annotations: _,
                 } => *self.own_handles.entry(id).or_insert(new_id),
 
                 // Everything not-related to `own<T>` doesn't get its ID
@@ -3373,6 +3383,7 @@ impl Remap {
                     kind: TypeDefKind::Handle(Handle::Own(*id)),
                     docs: Default::default(),
                     stability: Default::default(),
+                    annotations: Default::default()
                 })
             });
         }
@@ -3542,7 +3553,7 @@ impl Remap {
         assert_eq!(world.includes.len(), spans.includes.len());
         let includes = mem::take(&mut world.includes);
         let include_names = mem::take(&mut world.include_names);
-        for (((stability, include_world), span), names) in includes
+        for (((stability, _annotations, include_world), span), names) in includes
             .into_iter()
             .zip(&spans.includes)
             .zip(&include_names)
@@ -3694,10 +3705,12 @@ impl Remap {
                         WorldItem::Interface {
                             id: aid,
                             stability: astability,
+                            annotations: _aannotations
                         },
                         WorldItem::Interface {
                             id: bid,
                             stability: bstability,
+                            annotations: _bannotations
                         },
                     ) => {
                         assert_eq!(*aid, *bid);
@@ -4133,6 +4146,27 @@ fn update_stability(from: &Stability, into: &mut Stability) -> Result<()> {
     // Failing all that this means that the two attributes are different so
     // generate an error.
     bail!("mismatch in stability from '{:?}' to '{:?}'", from, into)
+}
+
+/// Updates  annotations when merging `from` into `into`.
+///
+/// This is done to keep up-to-date annotation information if possible.
+fn update_annotations(from: &Annotations, into: &mut Annotations) -> Result<()> {
+    // If `from` is unknown or the two stability annotations are equal then
+    // there's nothing to do here.
+    if from == into || from.is_empty() {
+        return Ok(());
+    }
+    // Otherwise if `into` is unknown then inherit the annotations listed in
+    // `from`.
+    if into.is_empty() {
+        *into = from.clone();
+        return Ok(());
+    }
+
+    // Failing all that this means that the two annotation are different so
+    // generate an error.
+    bail!("mismatch in annotations from '{:?}' to '{:?}'", from, into)
 }
 
 fn merge_include_stability(
