@@ -2718,6 +2718,7 @@ impl<'a> Shims<'a> {
                         result: wit_result,
                         docs: Default::default(),
                         stability: Stability::Unknown,
+                        annotations: Default::default()
                     },
                     if async_ {
                         AbiVariant::GuestImportAsync
@@ -2815,6 +2816,7 @@ fn task_return_options_and_type(
         result: None,
         docs: Default::default(),
         stability: Stability::Unknown,
+        annotations: Default::default()
     };
     let abi = AbiVariant::GuestImport;
     let options = RequiredOptions::for_import(resolve, &func_tmp, abi);

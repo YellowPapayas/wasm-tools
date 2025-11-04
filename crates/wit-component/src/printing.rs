@@ -1145,6 +1145,7 @@ impl<O: Output> WitPrinter<O> {
                     self.output.newline();
                 }
             }
+            _ => {todo!()}
         }
     }
 }
