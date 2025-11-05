@@ -712,7 +712,7 @@ impl<'a> Include<'a> {
                 tokens,
                 Token::LeftBrace,
                 Token::RightBrace,
-                |_docs, tokens| {
+                |_docs, _annotations, tokens| {
                     let name = parse_id(tokens)?;
                     tokens.expect(Token::As)?;
                     let as_ = parse_id(tokens)?;
@@ -880,12 +880,16 @@ impl<'a> ResourceFunc<'a> {
             Some((span, Token::Constructor)) => {
                 tokens.expect(Token::Constructor)?;
                 tokens.expect(Token::LeftParen)?;
-                let params = parse_list_trailer(tokens, Token::RightParen, |_docs, tokens| {
-                    let name = parse_id(tokens)?;
-                    tokens.expect(Token::Colon)?;
-                    let ty = Type::parse(tokens)?;
-                    Ok((name, ty))
-                })?;
+                let params = parse_list_trailer(
+                    tokens,
+                    Token::RightParen,
+                    |_docs, _annotations, tokens| {
+                        let name = parse_id(tokens)?;
+                        tokens.expect(Token::Colon)?;
+                        let ty = Type::parse(tokens)?;
+                        Ok((name, ty))
+                    },
+                )?;
                 let result = if tokens.eat(Token::RArrow)? {
                     let ty = Type::parse(tokens)?;
                     Some(ty)
@@ -1045,7 +1049,7 @@ impl<'a> Func<'a> {
             if left_paren {
                 tokens.expect(Token::LeftParen)?;
             };
-            parse_list_trailer(tokens, Token::RightParen, |_docs, tokens| {
+            parse_list_trailer(tokens, Token::RightParen, |_docs, _annotations, tokens| {
                 let name = parse_id(tokens)?;
                 tokens.expect(Token::Colon)?;
                 let ty = Type::parse(tokens)?;
@@ -1146,11 +1150,11 @@ impl<'a> TypeDef<'a> {
                 tokens,
                 Token::LeftBrace,
                 Token::RightBrace,
-                |docs, tokens| {
+                |docs, annotations, tokens| {
                     let name = parse_id(tokens)?;
                     Ok(Flag {
                         docs,
-                        annotations: Annotations::default(),
+                        annotations,
                         name,
                     })
                 },
@@ -1211,13 +1215,13 @@ impl<'a> TypeDef<'a> {
                 tokens,
                 Token::LeftBrace,
                 Token::RightBrace,
-                |docs, tokens| {
+                |docs, annotations, tokens| {
                     let name = parse_id(tokens)?;
                     tokens.expect(Token::Colon)?;
                     let ty = Type::parse(tokens)?;
                     Ok(Field {
                         docs,
-                        annotations: Annotations::default(),
+                        annotations,
                         name,
                         ty,
                     })
@@ -1247,7 +1251,7 @@ impl<'a> TypeDef<'a> {
                 tokens,
                 Token::LeftBrace,
                 Token::RightBrace,
-                |docs, tokens| {
+                |docs, annotations, tokens| {
                     let name = parse_id(tokens)?;
                     let ty = if tokens.eat(Token::LeftParen)? {
                         let ty = Type::parse(tokens)?;
@@ -1258,7 +1262,7 @@ impl<'a> TypeDef<'a> {
                     };
                     Ok(Case {
                         docs,
-                        annotations: Annotations::default(),
+                        annotations,
                         name,
                         ty,
                     })
@@ -1288,11 +1292,11 @@ impl<'a> TypeDef<'a> {
                 tokens,
                 Token::LeftBrace,
                 Token::RightBrace,
-                |docs, tokens| {
+                |docs, annotations, tokens| {
                     let name = parse_id(tokens)?;
                     Ok(EnumCase {
                         docs,
-                        annotations: Annotations::default(),
+                        annotations,
                         name,
                     })
                 },
@@ -1490,7 +1494,7 @@ impl<'a> Type<'a> {
                     tokens,
                     Token::LessThan,
                     Token::GreaterThan,
-                    |_docs, tokens| Type::parse(tokens),
+                    |_docs, _annotations, tokens| Type::parse(tokens),
                 )?;
                 Ok(Type::Tuple(Tuple { span, types }))
             }
@@ -1659,7 +1663,7 @@ fn parse_list<'a, T>(
     tokens: &mut Tokenizer<'a>,
     start: Token,
     end: Token,
-    parse: impl FnMut(Docs<'a>, &mut Tokenizer<'a>) -> Result<T>,
+    parse: impl FnMut(Docs<'a>, Annotations<'a>, &mut Tokenizer<'a>) -> Result<T>,
 ) -> Result<Vec<T>> {
     tokens.expect(start)?;
     parse_list_trailer(tokens, end, parse)
@@ -1668,19 +1672,20 @@ fn parse_list<'a, T>(
 fn parse_list_trailer<'a, T>(
     tokens: &mut Tokenizer<'a>,
     end: Token,
-    mut parse: impl FnMut(Docs<'a>, &mut Tokenizer<'a>) -> Result<T>,
+    mut parse: impl FnMut(Docs<'a>, Annotations<'a>, &mut Tokenizer<'a>) -> Result<T>,
 ) -> Result<Vec<T>> {
     let mut items = Vec::new();
     loop {
         // get docs before we skip them to try to eat the end token
         let docs = parse_docs(tokens)?;
+        let annotations = Annotations::parse_annotations(tokens)?;
 
         // if we found an end token then we're done
         if tokens.eat(end)? {
             break;
         }
 
-        let item = parse(docs, tokens)?;
+        let item = parse(docs, annotations, tokens)?;
         items.push(item);
 
         // if there's no trailing comma then this is required to be the end,

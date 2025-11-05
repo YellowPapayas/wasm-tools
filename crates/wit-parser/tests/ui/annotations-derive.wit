@@ -24,11 +24,11 @@ interface validation-examples {
   #align(16)
   record vector3 {
     #finite
-    x: float32,
+    x: f32,
     #finite
-    y: float32,
+    y: f32,
     #finite
-    z: float32,
+    z: f32,
   }
 
   #derive(Debug)]

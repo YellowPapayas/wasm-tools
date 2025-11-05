@@ -1,0 +1,196 @@
+{
+  "worlds": [
+    {
+      "name": "test",
+      "imports": {
+        "interface-0": {
+          "interface": {
+            "id": 0
+          }
+        }
+      },
+      "exports": {
+        "interface-0": {
+          "interface": {
+            "id": 0
+          }
+        }
+      },
+      "package": 0,
+      "annotations": {
+        "contents": [
+          "cfg(feature = \"test-world\")"
+        ]
+      }
+    }
+  ],
+  "interfaces": [
+    {
+      "name": "basic",
+      "types": {
+        "counter": 0,
+        "results": 1,
+        "status": 2
+      },
+      "functions": {
+        "increment": {
+          "name": "increment",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "value",
+              "type": 0
+            },
+            {
+              "name": "amount",
+              "type": "u32"
+            }
+          ],
+          "result": 0,
+          "annotations": {
+            "contents": [
+              "assert(amount > 0, \"amount must be greater than zero\")",
+              "inline"
+            ]
+          }
+        },
+        "get-status": {
+          "name": "get-status",
+          "kind": "freestanding",
+          "params": [],
+          "result": 3,
+          "annotations": {
+            "contents": [
+              "must_use",
+              "cfg(feature = \"status-check\")"
+            ]
+          }
+        },
+        "divide": {
+          "name": "divide",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "dividend",
+              "type": "u32"
+            },
+            {
+              "name": "divisor",
+              "type": "u32"
+            }
+          ],
+          "result": "u32",
+          "annotations": {
+            "contents": [
+              "assert(divisor != 0, \"divisor cannot be zero\")"
+            ]
+          }
+        }
+      },
+      "docs": {
+        "contents": "Standard codegen hints:\n    - #derive, #serde, #repr for type generation\n    - #assert for runtime validation (e.g., divisor != 0)\n    - #cfg for feature gating\n    - #must_use, #inline, #no_mangle for code generation"
+      },
+      "annotations": {
+        "contents": [
+          "derive(Debug, Clone, PartialEq)"
+        ]
+      },
+      "package": 0
+    }
+  ],
+  "types": [
+    {
+      "name": "counter",
+      "kind": {
+        "type": "u32"
+      },
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          "derive(Debug, Clone, Copy, Hash)"
+        ]
+      }
+    },
+    {
+      "name": "results",
+      "kind": {
+        "record": {
+          "fields": [
+            {
+              "name": "success",
+              "type": "bool"
+            },
+            {
+              "name": "message",
+              "type": "string",
+              "annotations": {
+                "contents": [
+                  "serde(rename = \"msg\")"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          "derive(Debug, Clone, PartialEq, Eq)",
+          "serde(rename_all = \"camelCase\")"
+        ]
+      }
+    },
+    {
+      "name": "status",
+      "kind": {
+        "enum": {
+          "cases": [
+            {
+              "name": "pending"
+            },
+            {
+              "name": "active"
+            },
+            {
+              "name": "completed"
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          "derive(Debug, Copy, Clone, PartialEq, Eq)",
+          "repr(u8)"
+        ]
+      }
+    },
+    {
+      "name": null,
+      "kind": {
+        "result": {
+          "ok": null,
+          "err": null
+        }
+      },
+      "owner": null
+    }
+  ],
+  "packages": [
+    {
+      "name": "test:annotations-basic",
+      "interfaces": {
+        "basic": 0
+      },
+      "worlds": {
+        "test": 0
+      }
+    }
+  ]
+}

@@ -13,7 +13,7 @@ interface basic {
 
   #derive(Debug, Clone, PartialEq, Eq)
   #serde(rename_all = "camelCase")
-  record result {
+  record results {
     success: bool,
     #serde(rename = "msg")
     message: string,
