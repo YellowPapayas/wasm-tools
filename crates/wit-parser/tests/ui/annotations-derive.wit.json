@@ -153,7 +153,7 @@
         "contents": [
           {
             "label": "derive",
-            "value": "Debug, Clone)]"
+            "value": "Debug, Clone"
           },
           {
             "label": "validate_utf8",
@@ -213,7 +213,7 @@
         "contents": [
           {
             "label": "derive",
-            "value": "Debug, Copy, Clone)]"
+            "value": "Debug, Copy, Clone"
           },
           {
             "label": "repr",
@@ -274,7 +274,7 @@
         "contents": [
           {
             "label": "derive",
-            "value": "Debug)]"
+            "value": "Debug"
           }
         ]
       }

@@ -51,6 +51,7 @@ pub enum Token {
     Slash,
     Plus,
     Minus,
+    ExtraCharacter,
 
     Use,
     Type,
@@ -223,14 +224,7 @@ impl<'a> Tokenizer<'a> {
                     Slash
                 }
             }
-            '#' => {
-                for (_, ch) in &mut self.chars {
-                    if ch == '\n' {
-                        break;
-                    }
-                }
-                Annotation
-            }
+            '#' => Annotation,
             '=' => Equals,
             ',' => Comma,
             ':' => Colon,
@@ -340,7 +334,7 @@ impl<'a> Tokenizer<'a> {
                 Integer
             }
 
-            ch => return Err(Error::Unexpected(start, ch)),
+            _ => ExtraCharacter, //return Err(Error::Unexpected(start, ch)),
         };
         let end = match self.chars.clone().next() {
             Some((i, _)) => i,
@@ -577,6 +571,7 @@ impl Token {
             Slash => "`/`",
             Plus => "`+`",
             Minus => "`-`",
+            ExtraCharacter => "an extra character",
             As => "keyword `as`",
             From_ => "keyword `from`",
             Static => "keyword `static`",

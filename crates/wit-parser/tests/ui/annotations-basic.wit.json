@@ -32,7 +32,7 @@
       "name": "basic",
       "types": {
         "counter": 0,
-        "results": 1,
+        "my-result": 1,
         "status": 2
       },
       "functions": {
@@ -138,7 +138,7 @@
       }
     },
     {
-      "name": "results",
+      "name": "my-result",
       "kind": {
         "record": {
           "fields": [

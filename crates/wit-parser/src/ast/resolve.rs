@@ -324,8 +324,8 @@ impl<'a> Resolver<'a> {
             name: None,
             types: IndexMap::new(),
             docs: Docs::default(),
-            annotations: Annotations::default(),
             stability: Default::default(),
+            annotations: Annotations::default(),
             functions: IndexMap::new(),
             package: None,
         })
@@ -341,13 +341,13 @@ impl<'a> Resolver<'a> {
         self.worlds.alloc(World {
             name: String::new(),
             docs: Docs::default(),
+            stability: Default::default(),
             annotations: Annotations::default(),
             exports: IndexMap::new(),
             imports: IndexMap::new(),
             package: None,
             includes: Default::default(),
             include_names: Default::default(),
-            stability: Default::default(),
         })
     }
 
@@ -595,8 +595,8 @@ impl<'a> Resolver<'a> {
                     }
                     let id = self.types.alloc(TypeDef {
                         docs: Docs::default(),
-                        annotations: Annotations::default(),
                         stability: stability.clone(),
+                        annotations: Annotations::default(),
                         kind: TypeDefKind::Unknown,
                         name: Some(name.name.name.to_string()),
                         owner: TypeOwner::Interface(iface),
@@ -774,7 +774,7 @@ impl<'a> Resolver<'a> {
     fn resolve_world_item(
         &mut self,
         docs: &ast::Docs<'a>,
-        annotations: &ast::Annotations<'a>,
+        annotations: &ast::Annotations,
         attrs: &[ast::Attribute<'a>],
         kind: &ast::ExternKind<'a>,
     ) -> Result<WorldItem> {
@@ -818,7 +818,7 @@ impl<'a> Resolver<'a> {
         interface_id: InterfaceId,
         fields: &[ast::InterfaceItem<'a>],
         docs: &ast::Docs<'a>,
-        annotations: &ast::Annotations<'a>,
+        annotations: &ast::Annotations,
         attrs: &[ast::Attribute<'a>],
     ) -> Result<()> {
         let docs = self.docs(docs);
@@ -960,11 +960,11 @@ impl<'a> Resolver<'a> {
             let docs = self.docs(&def.docs);
             let annotations = self.annotations(&def.annotations);
             let stability = self.stability(&def.attributes)?;
-            let kind = self.resolve_type_def(&def.ty, &stability)?;
+            let kind = self.resolve_type_def(&def.ty, &stability, &annotations)?;
             let id = self.types.alloc(TypeDef {
                 docs,
-                annotations,
                 stability,
+                annotations,
                 kind,
                 name: Some(def.name.name.to_string()),
                 owner,
@@ -999,6 +999,7 @@ impl<'a> Resolver<'a> {
         let (item, name, span) = self.resolve_ast_item_path(&u.from)?;
         let use_from = self.extract_iface_from_item(&item, &name, span)?;
         let stability = self.stability(&u.attributes)?;
+        let annotations = self.annotations(&u.annotations);
 
         for name in u.names.iter() {
             let lookup = &self.interface_types[use_from.index()];
@@ -1019,8 +1020,8 @@ impl<'a> Resolver<'a> {
             let name = name.as_.as_ref().unwrap_or(&name.name);
             let id = self.types.alloc(TypeDef {
                 docs: Docs::default(),
-                annotations: Annotations::default(),
                 stability: stability.clone(),
+                annotations: annotations.clone(),
                 kind: TypeDefKind::Type(Type::Id(id)),
                 name: Some(name.name.to_string()),
                 owner,
@@ -1101,7 +1102,7 @@ impl<'a> Resolver<'a> {
     fn resolve_function(
         &mut self,
         docs: &ast::Docs<'_>,
-        annotations: &ast::Annotations<'_>,
+        annotations: &ast::Annotations,
         attrs: &[ast::Attribute<'_>],
         name: &str,
         func: &ast::Func,
@@ -1192,6 +1193,7 @@ impl<'a> Resolver<'a> {
         &mut self,
         ty: &ast::Type<'_>,
         stability: &Stability,
+        annotations: &Annotations,
     ) -> Result<TypeDefKind> {
         Ok(match ty {
             ast::Type::Bool(_) => TypeDefKind::Type(Type::Bool),
@@ -1213,11 +1215,11 @@ impl<'a> Resolver<'a> {
                 TypeDefKind::Type(Type::Id(id))
             }
             ast::Type::List(list) => {
-                let ty = self.resolve_type(&list.ty, stability)?;
+                let ty = self.resolve_type(&list.ty, stability, annotations)?;
                 TypeDefKind::List(ty)
             }
             ast::Type::FixedSizeList(list) => {
-                let ty = self.resolve_type(&list.ty, stability)?;
+                let ty = self.resolve_type(&list.ty, stability, annotations)?;
                 TypeDefKind::FixedSizeList(ty, list.size)
             }
             ast::Type::Handle(handle) => TypeDefKind::Handle(match handle {
@@ -1261,7 +1263,7 @@ impl<'a> Resolver<'a> {
                             docs: self.docs(&field.docs),
                             annotations: self.annotations(&field.annotations),
                             name: field.name.name.to_string(),
-                            ty: self.resolve_type(&field.ty, stability)?,
+                            ty: self.resolve_type(&field.ty, stability, annotations)?,
                         })
                     })
                     .collect::<Result<Vec<_>>>()?;
@@ -1283,7 +1285,7 @@ impl<'a> Resolver<'a> {
                 let types = t
                     .types
                     .iter()
-                    .map(|ty| self.resolve_type(ty, stability))
+                    .map(|ty| self.resolve_type(ty, stability, annotations))
                     .collect::<Result<Vec<_>>>()?;
                 TypeDefKind::Tuple(Tuple { types })
             }
@@ -1299,7 +1301,11 @@ impl<'a> Resolver<'a> {
                             docs: self.docs(&case.docs),
                             annotations: self.annotations(&case.annotations),
                             name: case.name.name.to_string(),
-                            ty: self.resolve_optional_type(case.ty.as_ref(), stability)?,
+                            ty: self.resolve_optional_type(
+                                case.ty.as_ref(),
+                                stability,
+                                annotations,
+                            )?,
                         })
                     })
                     .collect::<Result<Vec<_>>>()?;
@@ -1322,17 +1328,23 @@ impl<'a> Resolver<'a> {
                     .collect::<Result<Vec<_>>>()?;
                 TypeDefKind::Enum(Enum { cases })
             }
-            ast::Type::Option(ty) => TypeDefKind::Option(self.resolve_type(&ty.ty, stability)?),
+            ast::Type::Option(ty) => {
+                TypeDefKind::Option(self.resolve_type(&ty.ty, stability, annotations)?)
+            }
             ast::Type::Result(r) => TypeDefKind::Result(Result_ {
-                ok: self.resolve_optional_type(r.ok.as_deref(), stability)?,
-                err: self.resolve_optional_type(r.err.as_deref(), stability)?,
+                ok: self.resolve_optional_type(r.ok.as_deref(), stability, annotations)?,
+                err: self.resolve_optional_type(r.err.as_deref(), stability, annotations)?,
             }),
-            ast::Type::Future(t) => {
-                TypeDefKind::Future(self.resolve_optional_type(t.ty.as_deref(), stability)?)
-            }
-            ast::Type::Stream(s) => {
-                TypeDefKind::Stream(self.resolve_optional_type(s.ty.as_deref(), stability)?)
-            }
+            ast::Type::Future(t) => TypeDefKind::Future(self.resolve_optional_type(
+                t.ty.as_deref(),
+                stability,
+                annotations,
+            )?),
+            ast::Type::Stream(s) => TypeDefKind::Stream(self.resolve_optional_type(
+                s.ty.as_deref(),
+                stability,
+                annotations,
+            )?),
         })
     }
 
@@ -1435,7 +1447,12 @@ impl<'a> Resolver<'a> {
         }
     }
 
-    fn resolve_type(&mut self, ty: &super::Type<'_>, stability: &Stability) -> Result<Type> {
+    fn resolve_type(
+        &mut self,
+        ty: &super::Type<'_>,
+        stability: &Stability,
+        annotations: &Annotations,
+    ) -> Result<Type> {
         // Resources must be declared at the top level to have their methods
         // processed appropriately, but resources also shouldn't show up
         // recursively so assert that's not happening here.
@@ -1443,15 +1460,15 @@ impl<'a> Resolver<'a> {
             ast::Type::Resource(_) => unreachable!(),
             _ => {}
         }
-        let kind = self.resolve_type_def(ty, stability)?;
+        let kind = self.resolve_type_def(ty, stability, annotations)?;
         let stability = self.find_stability(&kind, stability);
         Ok(self.anon_type_def(
             TypeDef {
                 kind,
                 name: None,
                 docs: Docs::default(),
-                annotations: Annotations::default(),
                 stability,
+                annotations: annotations.clone(),
                 owner: TypeOwner::None,
             },
             ty.span(),
@@ -1462,9 +1479,10 @@ impl<'a> Resolver<'a> {
         &mut self,
         ty: Option<&super::Type<'_>>,
         stability: &Stability,
+        annotations: &Annotations,
     ) -> Result<Option<Type>> {
         match ty {
-            Some(ty) => Ok(Some(self.resolve_type(ty, stability)?)),
+            Some(ty) => Ok(Some(self.resolve_type(ty, stability, annotations)?)),
             None => Ok(None),
         }
     }
@@ -1567,18 +1585,13 @@ impl<'a> Resolver<'a> {
         Docs { contents }
     }
 
-    fn annotations(&mut self, annotations: &super::Annotations<'_>) -> Annotations {
+    fn annotations(&mut self, annotations: &super::Annotations) -> Annotations {
         let contents = annotations
             .annotations
             .iter()
             .map(|ann| Annotation {
-                label: ann.0.trim_start_matches("#").trim_end().to_string(),
-                value: ann
-                    .1
-                    .trim_end()
-                    .trim_end_matches(")")
-                    .trim_start_matches("(")
-                    .to_string(),
+                label: ann.0.to_string(),
+                value: ann.1.to_string(),
             })
             .collect();
         Annotations { contents }
@@ -1666,8 +1679,8 @@ impl<'a> Resolver<'a> {
                 let shared = self.anon_type_def(
                     TypeDef {
                         docs: Docs::default(),
-                        annotations: Annotations::default(),
                         stability,
+                        annotations: Annotations::default(),
                         kind,
                         name: None,
                         owner: TypeOwner::None,
@@ -1680,7 +1693,7 @@ impl<'a> Resolver<'a> {
         for (name, ty) in params {
             let prev = ret.insert(
                 name.name.to_string(),
-                self.resolve_type(ty, &Stability::Unknown)?,
+                self.resolve_type(ty, &Stability::Unknown, &Annotations::default())?,
             );
             if prev.is_some() {
                 bail!(Error::new(
@@ -1707,7 +1720,11 @@ impl<'a> Resolver<'a> {
             | FunctionKind::AsyncMethod(_)
             | FunctionKind::Static(_)
             | FunctionKind::AsyncStatic(_) => match result {
-                Some(ty) => Ok(Some(self.resolve_type(ty, &Stability::Unknown)?)),
+                Some(ty) => Ok(Some(self.resolve_type(
+                    ty,
+                    &Stability::Unknown,
+                    &Annotations::default(),
+                )?)),
                 None => Ok(None),
             },
 
@@ -1730,7 +1747,7 @@ impl<'a> Resolver<'a> {
         resource_id: TypeId,
         result_ast: &ast::Type<'_>,
     ) -> Result<Type> {
-        let result = self.resolve_type(result_ast, &Stability::Unknown)?;
+        let result = self.resolve_type(result_ast, &Stability::Unknown, &Annotations::default())?;
         let ok_type = match result {
             Type::Id(id) => match &self.types[id].kind {
                 TypeDefKind::Result(r) => Some(r.ok),

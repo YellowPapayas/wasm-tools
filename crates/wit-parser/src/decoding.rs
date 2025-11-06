@@ -304,13 +304,13 @@ impl ComponentInfo {
         let world = decoder.resolve.worlds.alloc(World {
             name: world_name.to_string(),
             docs: Default::default(),
-            annotations: Default::default(),
             imports: Default::default(),
             exports: Default::default(),
             package: None,
             includes: Default::default(),
             include_names: Default::default(),
             stability: Default::default(),
+            annotations: Default::default(),
         });
         let mut package = Package {
             // Similar to `world_name` above this is arbitrarily chosen as it's
@@ -896,11 +896,11 @@ impl WitPackageDecoder<'_> {
                 self.resolve.interfaces.alloc(Interface {
                     name: Some(name.interface().to_string()),
                     docs: Default::default(),
-                    annotations: Default::default(),
                     types: IndexMap::default(),
                     functions: IndexMap::new(),
                     package: None,
                     stability: Default::default(),
+                    annotations: Default::default(),
                 })
             });
 
@@ -952,11 +952,11 @@ impl WitPackageDecoder<'_> {
         let mut interface = Interface {
             name: interface_name.clone(),
             docs: Default::default(),
-            annotations: Default::default(),
             types: IndexMap::default(),
             functions: IndexMap::new(),
             package: None,
             stability: Default::default(),
+            annotations: Default::default(),
         };
 
         let owner = TypeOwner::Interface(self.resolve.interfaces.next_id());
@@ -1051,8 +1051,8 @@ impl WitPackageDecoder<'_> {
             name: Some(name.to_string()),
             kind,
             docs: Default::default(),
-            annotations: Default::default(),
             stability: Default::default(),
+            annotations: Default::default(),
             owner,
         });
 
@@ -1085,13 +1085,13 @@ impl WitPackageDecoder<'_> {
         let mut world = World {
             name: name.clone(),
             docs: Default::default(),
-            annotations: Default::default(),
             imports: Default::default(),
             exports: Default::default(),
             includes: Default::default(),
             include_names: Default::default(),
             package: None,
             stability: Default::default(),
+            annotations: Default::default(),
         };
 
         let owner = TypeOwner::World(self.resolve.worlds.next_id());
@@ -1201,8 +1201,8 @@ impl WitPackageDecoder<'_> {
         };
         Ok(Function {
             docs: Default::default(),
-            annotations: Default::default(),
             stability: Default::default(),
+            annotations: Default::default(),
             kind: match name.kind() {
                 ComponentNameKind::Label(_) => FunctionKind::Freestanding,
                 ComponentNameKind::AsyncLabel(_) => FunctionKind::AsyncFreestanding,
@@ -1280,8 +1280,8 @@ impl WitPackageDecoder<'_> {
         let ty = self.resolve.types.alloc(TypeDef {
             name: None,
             docs: Default::default(),
-            annotations: Default::default(),
             stability: Default::default(),
+            annotations: Default::default(),
             owner: TypeOwner::None,
             kind,
         });

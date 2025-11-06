@@ -263,7 +263,7 @@
         "contents": [
           {
             "label": "derive",
-            "value": "Debug)]"
+            "value": "Debug"
           },
           {
             "label": "validate_on_construct",
@@ -315,7 +315,7 @@
         "contents": [
           {
             "label": "derive",
-            "value": "Debug, Clone)]"
+            "value": "Debug, Clone"
           },
           {
             "label": "zeroize_on_drop",
@@ -338,7 +338,7 @@
         "contents": [
           {
             "label": "derive",
-            "value": "Debug)]"
+            "value": "Debug"
           }
         ]
       }
@@ -386,11 +386,11 @@
         "contents": [
           {
             "label": "derive",
-            "value": "Debug, Copy, Clone)]"
+            "value": "Debug, Copy, Clone"
           },
           {
             "label": "repr",
-            "value": "u8)]"
+            "value": "u8"
           }
         ]
       }

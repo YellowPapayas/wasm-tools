@@ -9,7 +9,7 @@ package test:annotations-safety;
 //     - #test_only, #mock_return for testing
 
 interface safety-examples {
-  #derive(Debug)]
+  #derive(Debug)
   #validate_on_construct
   record safe-path {
     #sanitize(mode = "path")
@@ -18,7 +18,7 @@ interface safety-examples {
     path: string,
   }
 
-  #derive(Debug, Clone)]
+  #derive(Debug, Clone)
   #zeroize_on_drop
   #sensitive
   record credentials {
@@ -29,7 +29,7 @@ interface safety-examples {
     expires-in: u32,
   }
 
-  #derive(Debug)]
+  #derive(Debug)
   resource secure-connection {
     #validate_host
     #require_tls
@@ -49,8 +49,8 @@ interface safety-examples {
     disconnect: func();
   }
 
-  #derive(Debug, Copy, Clone)]
-  #repr(u8)]
+  #derive(Debug, Copy, Clone)
+  #repr(u8)
   enum access-level {
     #min_privilege
     guest,
