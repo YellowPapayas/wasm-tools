@@ -28,8 +28,14 @@
           "result": 7,
           "annotations": {
             "contents": [
-              "validate_host",
-              "require_tls"
+              {
+                "label": "validate_host",
+                "value": ""
+              },
+              {
+                "label": "require_tls",
+                "value": ""
+              }
             ]
           }
         },
@@ -51,9 +57,18 @@
           "result": "bool",
           "annotations": {
             "contents": [
-              "encrypt(algorithm = \"aes-256-gcm\")",
-              "non_null(payload)",
-              "max_size(payload, 65536)"
+              {
+                "label": "encrypt",
+                "value": "algorithm = \"aes-256-gcm\""
+              },
+              {
+                "label": "non_null",
+                "value": "payload"
+              },
+              {
+                "label": "max_size",
+                "value": "payload, 65536"
+              }
             ]
           }
         },
@@ -71,8 +86,14 @@
           "result": 6,
           "annotations": {
             "contents": [
-              "decrypt",
-              "verify_signature"
+              {
+                "label": "decrypt",
+                "value": ""
+              },
+              {
+                "label": "verify_signature",
+                "value": ""
+              }
             ]
           }
         },
@@ -89,8 +110,14 @@
           ],
           "annotations": {
             "contents": [
-              "audit_log",
-              "inject_after(\"security::log_disconnect(&self.host);\")"
+              {
+                "label": "audit_log",
+                "value": ""
+              },
+              {
+                "label": "inject_after",
+                "value": "\"security::log_disconnect(&self.host);\""
+              }
             ]
           }
         },
@@ -106,9 +133,18 @@
           "result": "bool",
           "annotations": {
             "contents": [
-              "authorize(level = \"admin\")",
-              "audit_log",
-              "rate_limit(10, per_minute)"
+              {
+                "label": "authorize",
+                "value": "level = \"admin\""
+              },
+              {
+                "label": "audit_log",
+                "value": ""
+              },
+              {
+                "label": "rate_limit",
+                "value": "10, per_minute"
+              }
             ]
           }
         },
@@ -124,9 +160,18 @@
           "result": "string",
           "annotations": {
             "contents": [
-              "escape_html",
-              "sanitize(mode = \"html\")",
-              "max_length(input, 10000)"
+              {
+                "label": "escape_html",
+                "value": ""
+              },
+              {
+                "label": "sanitize",
+                "value": "mode = \"html\""
+              },
+              {
+                "label": "max_length",
+                "value": "input, 10000"
+              }
             ]
           }
         },
@@ -146,8 +191,14 @@
           "result": "bool",
           "annotations": {
             "contents": [
-              "constant_time",
-              "no_short_circuit"
+              {
+                "label": "constant_time",
+                "value": ""
+              },
+              {
+                "label": "no_short_circuit",
+                "value": ""
+              }
             ]
           }
         },
@@ -158,8 +209,14 @@
           "result": "u32",
           "annotations": {
             "contents": [
-              "test_only",
-              "mock_return(42)"
+              {
+                "label": "test_only",
+                "value": ""
+              },
+              {
+                "label": "mock_return",
+                "value": "42"
+              }
             ]
           }
         }
@@ -181,9 +238,18 @@
               "type": "string",
               "annotations": {
                 "contents": [
-                  "sanitize(mode = \"path\")",
-                  "no_path_traversal",
-                  "max_length(4096)"
+                  {
+                    "label": "sanitize",
+                    "value": "mode = \"path\""
+                  },
+                  {
+                    "label": "no_path_traversal",
+                    "value": ""
+                  },
+                  {
+                    "label": "max_length",
+                    "value": "4096"
+                  }
                 ]
               }
             }
@@ -195,8 +261,14 @@
       },
       "annotations": {
         "contents": [
-          "derive(Debug)]",
-          "validate_on_construct"
+          {
+            "label": "derive",
+            "value": "Debug)]"
+          },
+          {
+            "label": "validate_on_construct",
+            "value": ""
+          }
         ]
       }
     },
@@ -210,8 +282,14 @@
               "type": "string",
               "annotations": {
                 "contents": [
-                  "non_empty",
-                  "validate_base64"
+                  {
+                    "label": "non_empty",
+                    "value": ""
+                  },
+                  {
+                    "label": "validate_base64",
+                    "value": ""
+                  }
                 ]
               }
             },
@@ -220,7 +298,10 @@
               "type": "u32",
               "annotations": {
                 "contents": [
-                  "range(1, 3600)"
+                  {
+                    "label": "range",
+                    "value": "1, 3600"
+                  }
                 ]
               }
             }
@@ -232,9 +313,18 @@
       },
       "annotations": {
         "contents": [
-          "derive(Debug, Clone)]",
-          "zeroize_on_drop",
-          "sensitive"
+          {
+            "label": "derive",
+            "value": "Debug, Clone)]"
+          },
+          {
+            "label": "zeroize_on_drop",
+            "value": ""
+          },
+          {
+            "label": "sensitive",
+            "value": ""
+          }
         ]
       }
     },
@@ -246,7 +336,10 @@
       },
       "annotations": {
         "contents": [
-          "derive(Debug)]"
+          {
+            "label": "derive",
+            "value": "Debug)]"
+          }
         ]
       }
     },
@@ -259,7 +352,10 @@
               "name": "guest",
               "annotations": {
                 "contents": [
-                  "min_privilege"
+                  {
+                    "label": "min_privilege",
+                    "value": ""
+                  }
                 ]
               }
             },
@@ -273,7 +369,10 @@
               "name": "super-admin",
               "annotations": {
                 "contents": [
-                  "require_mfa"
+                  {
+                    "label": "require_mfa",
+                    "value": ""
+                  }
                 ]
               }
             }
@@ -285,8 +384,14 @@
       },
       "annotations": {
         "contents": [
-          "derive(Debug, Copy, Clone)]",
-          "repr(u8)]"
+          {
+            "label": "derive",
+            "value": "Debug, Copy, Clone)]"
+          },
+          {
+            "label": "repr",
+            "value": "u8)]"
+          }
         ]
       }
     },

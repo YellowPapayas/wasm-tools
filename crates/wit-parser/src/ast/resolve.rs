@@ -1571,11 +1571,14 @@ impl<'a> Resolver<'a> {
         let contents = annotations
             .annotations
             .iter()
-            .map(|s| {
-                s.trim_start_matches("#")
-                    .trim_start()
+            .map(|ann| Annotation {
+                label: ann.0.trim_start_matches("#").trim_end().to_string(),
+                value: ann
+                    .1
                     .trim_end()
-                    .to_string()
+                    .trim_end_matches(")")
+                    .trim_start_matches("(")
+                    .to_string(),
             })
             .collect();
         Annotations { contents }

@@ -19,7 +19,10 @@
       "package": 0,
       "annotations": {
         "contents": [
-          "cfg(feature = \"test-world\")"
+          {
+            "label": "cfg",
+            "value": "feature = \"test-world\""
+          }
         ]
       }
     }
@@ -49,8 +52,14 @@
           "result": 0,
           "annotations": {
             "contents": [
-              "assert(amount > 0, \"amount must be greater than zero\")",
-              "inline"
+              {
+                "label": "assert",
+                "value": "amount > 0, \"amount must be greater than zero\""
+              },
+              {
+                "label": "inline",
+                "value": ""
+              }
             ]
           }
         },
@@ -61,8 +70,14 @@
           "result": 3,
           "annotations": {
             "contents": [
-              "must_use",
-              "cfg(feature = \"status-check\")"
+              {
+                "label": "must_use",
+                "value": ""
+              },
+              {
+                "label": "cfg",
+                "value": "feature = \"status-check\""
+              }
             ]
           }
         },
@@ -82,7 +97,10 @@
           "result": "u32",
           "annotations": {
             "contents": [
-              "assert(divisor != 0, \"divisor cannot be zero\")"
+              {
+                "label": "assert",
+                "value": "divisor != 0, \"divisor cannot be zero\""
+              }
             ]
           }
         }
@@ -92,7 +110,10 @@
       },
       "annotations": {
         "contents": [
-          "derive(Debug, Clone, PartialEq)"
+          {
+            "label": "derive",
+            "value": "Debug, Clone, PartialEq"
+          }
         ]
       },
       "package": 0
@@ -109,7 +130,10 @@
       },
       "annotations": {
         "contents": [
-          "derive(Debug, Clone, Copy, Hash)"
+          {
+            "label": "derive",
+            "value": "Debug, Clone, Copy, Hash"
+          }
         ]
       }
     },
@@ -127,7 +151,10 @@
               "type": "string",
               "annotations": {
                 "contents": [
-                  "serde(rename = \"msg\")"
+                  {
+                    "label": "serde",
+                    "value": "rename = \"msg\""
+                  }
                 ]
               }
             }
@@ -139,8 +166,14 @@
       },
       "annotations": {
         "contents": [
-          "derive(Debug, Clone, PartialEq, Eq)",
-          "serde(rename_all = \"camelCase\")"
+          {
+            "label": "derive",
+            "value": "Debug, Clone, PartialEq, Eq"
+          },
+          {
+            "label": "serde",
+            "value": "rename_all = \"camelCase\""
+          }
         ]
       }
     },
@@ -166,8 +199,14 @@
       },
       "annotations": {
         "contents": [
-          "derive(Debug, Copy, Clone, PartialEq, Eq)",
-          "repr(u8)"
+          {
+            "label": "derive",
+            "value": "Debug, Copy, Clone, PartialEq, Eq"
+          },
+          {
+            "label": "repr",
+            "value": "u8"
+          }
         ]
       }
     },

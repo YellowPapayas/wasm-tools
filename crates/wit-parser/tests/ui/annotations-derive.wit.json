@@ -21,9 +21,18 @@
           "result": "u64",
           "annotations": {
             "contents": [
-              "trace_calls",
-              "memoize",
-              "cache_result(ttl = 60)"
+              {
+                "label": "trace_calls",
+                "value": ""
+              },
+              {
+                "label": "memoize",
+                "value": ""
+              },
+              {
+                "label": "cache_result",
+                "value": "ttl = 60"
+              }
             ]
           }
         },
@@ -39,9 +48,18 @@
           "result": "u32",
           "annotations": {
             "contents": [
-              "zero_copy",
-              "non_null(data)",
-              "min_length(data, 1)"
+              {
+                "label": "zero_copy",
+                "value": ""
+              },
+              {
+                "label": "non_null",
+                "value": "data"
+              },
+              {
+                "label": "min_length",
+                "value": "data, 1"
+              }
             ]
           }
         },
@@ -61,8 +79,14 @@
           "result": "bool",
           "annotations": {
             "contents": [
-              "rate_limit(100, per_second)",
-              "log_params"
+              {
+                "label": "rate_limit",
+                "value": "100, per_second"
+              },
+              {
+                "label": "log_params",
+                "value": ""
+              }
             ]
           }
         }
@@ -84,8 +108,14 @@
               "type": "string",
               "annotations": {
                 "contents": [
-                  "non_empty",
-                  "max_length(255)"
+                  {
+                    "label": "non_empty",
+                    "value": ""
+                  },
+                  {
+                    "label": "max_length",
+                    "value": "255"
+                  }
                 ]
               }
             },
@@ -94,7 +124,10 @@
               "type": "string",
               "annotations": {
                 "contents": [
-                  "email_format"
+                  {
+                    "label": "email_format",
+                    "value": ""
+                  }
                 ]
               }
             },
@@ -103,7 +136,10 @@
               "type": "u8",
               "annotations": {
                 "contents": [
-                  "range(18, 120)"
+                  {
+                    "label": "range",
+                    "value": "18, 120"
+                  }
                 ]
               }
             }
@@ -115,8 +151,14 @@
       },
       "annotations": {
         "contents": [
-          "derive(Debug, Clone)]",
-          "validate_utf8"
+          {
+            "label": "derive",
+            "value": "Debug, Clone)]"
+          },
+          {
+            "label": "validate_utf8",
+            "value": ""
+          }
         ]
       }
     },
@@ -130,7 +172,10 @@
               "type": "f32",
               "annotations": {
                 "contents": [
-                  "finite"
+                  {
+                    "label": "finite",
+                    "value": ""
+                  }
                 ]
               }
             },
@@ -139,7 +184,10 @@
               "type": "f32",
               "annotations": {
                 "contents": [
-                  "finite"
+                  {
+                    "label": "finite",
+                    "value": ""
+                  }
                 ]
               }
             },
@@ -148,7 +196,10 @@
               "type": "f32",
               "annotations": {
                 "contents": [
-                  "finite"
+                  {
+                    "label": "finite",
+                    "value": ""
+                  }
                 ]
               }
             }
@@ -160,9 +211,18 @@
       },
       "annotations": {
         "contents": [
-          "derive(Debug, Copy, Clone)]",
-          "repr(C)",
-          "align(16)"
+          {
+            "label": "derive",
+            "value": "Debug, Copy, Clone)]"
+          },
+          {
+            "label": "repr",
+            "value": "C"
+          },
+          {
+            "label": "align",
+            "value": "16"
+          }
         ]
       }
     },
@@ -175,7 +235,10 @@
               "name": "ai-mode",
               "annotations": {
                 "contents": [
-                  "experimental"
+                  {
+                    "label": "experimental",
+                    "value": ""
+                  }
                 ]
               }
             },
@@ -183,7 +246,10 @@
               "name": "legacy-api",
               "annotations": {
                 "contents": [
-                  "deprecated"
+                  {
+                    "label": "deprecated",
+                    "value": ""
+                  }
                 ]
               }
             },
@@ -191,7 +257,10 @@
               "name": "core-features",
               "annotations": {
                 "contents": [
-                  "stable"
+                  {
+                    "label": "stable",
+                    "value": ""
+                  }
                 ]
               }
             }
@@ -203,7 +272,10 @@
       },
       "annotations": {
         "contents": [
-          "derive(Debug)]"
+          {
+            "label": "derive",
+            "value": "Debug)]"
+          }
         ]
       }
     },

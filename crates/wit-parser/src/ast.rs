@@ -764,7 +764,7 @@ impl<'a> Default for Docs<'a> {
 
 #[derive(Debug, Clone)]
 pub struct Annotations<'a> {
-    annotations: Vec<Cow<'a, str>>,
+    annotations: Vec<(String, Cow<'a, str>)>,
     span: Span,
 }
 
@@ -796,10 +796,19 @@ impl<'a> Annotations<'a> {
                         .take_while(|ch| ch.is_ascii_whitespace())
                         .count();
                     annotations.span.end = span.end - (trailing_ws as u32);
-                    annotations.annotations.push(annotation.into());
+                    let label: String;
+                    let mut value = "".to_string();
+                    if let Some((lab, val)) = annotation.split_once("(") {
+                        label = lab.to_string();
+                        value = "(".to_owned() + val;
+                    } else {
+                        label = annotation.to_string();
+                    }
+                    annotations.annotations.push((label.into(), value.into()));
                 }
                 _ => break,
             };
+
             *tokens = clone.clone();
         }
         Ok(annotations)
