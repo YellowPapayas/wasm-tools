@@ -8,7 +8,7 @@ package test:annotations-codegen;
 
 #cfg(feature = "advanced")
 interface performance-hints {
-  #derive(Debug)]
+  #derive(Debug)
   #stack_allocated
   #size(64)
   record small-buffer {
@@ -16,7 +16,7 @@ interface performance-hints {
     length: u32,
   }
 
-  #derive(Debug, Clone)]
+  #derive(Debug, Clone)
   #lazy_init
   resource cache {
     #preallocate(capacity = 1024)
@@ -33,11 +33,11 @@ interface performance-hints {
 
     #thread_safe
     #atomic
-    static get-instance: static func() -> cache;
+    get-instance: func() -> cache;
   }
 
-  #derive(Debug, Copy, Clone)]
-  #repr(u32)]
+  #derive(Debug, Copy, Clone)
+  #repr(u32)
   enum log-level {
     #cold
     trace,

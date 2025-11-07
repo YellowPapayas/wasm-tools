@@ -780,23 +780,16 @@ impl<'a> Annotations {
     fn parse_annotations(tokens: &mut Tokenizer<'a>) -> Result<Annotations> {
         let mut annotations = Annotations::default();
         let mut started = false;
-        let mut clone = tokens.clone();
-        while let Some((span, token)) = clone.next()? {
-            match token {
-                Token::Annotation => {
-                    if !started {
-                        annotations.span.start = span.start;
-                        started = true;
-                    }
-                    let label = parse_word(&mut clone)?;
-                    let value = parse_parantheses(&mut clone)?;
-                    annotations
-                        .annotations
-                        .push((label.name.to_string(), value));
-                }
-                _ => break,
+        while tokens.eat(Token::Hashtag)? {
+            let id_span = tokens.expect(Token::Id)?;
+            if !started {
+                annotations.span.start = id_span.start - 1;
+                started = true;
             }
-            *tokens = clone.clone();
+            let label = tokens.get_span(id_span);
+            let (value, value_span) = parse_parantheses(tokens)?;
+            annotations.span.end = value_span.end;
+            annotations.annotations.push((label.to_string(), value));
         }
         Ok(annotations)
     }
@@ -1345,16 +1338,6 @@ fn parse_id<'a>(tokens: &mut Tokenizer<'a>) -> Result<Id<'a>> {
     }
 }
 
-fn parse_word<'a>(tokens: &mut Tokenizer<'a>) -> Result<Id<'a>> {
-    match tokens.next()? {
-        Some((span, Token::Id)) => Ok(Id {
-            name: tokens.get_span(span),
-            span,
-        }),
-        other => Err(err_expected(tokens, "an identifier or string", other).into()),
-    }
-}
-
 fn parse_opt_version(tokens: &mut Tokenizer<'_>) -> Result<Option<(Span, Version)>> {
     if tokens.eat(Token::At)? {
         parse_version(tokens).map(Some)
@@ -1706,44 +1689,59 @@ fn parse_list_trailer<'a, T>(
     Ok(items)
 }
 
-fn parse_parantheses<'a>(tokens: &mut Tokenizer<'a>) -> Result<String> {
+fn parse_parantheses<'a>(tokens: &mut Tokenizer<'a>) -> Result<(String, Span)> {
     let mut output: String = "".to_string();
-    let mut clone = tokens.clone();
+    let mut output_span: Span = Span { start: 0, end: 0 };
+    let mut started = false;
     let mut depth = 0;
-    match clone.expect(Token::LeftParen) {
-        Ok(_) => (),
-        Err(_) => {
-            return Ok(output);
-        }
+    if !tokens.eat(Token::LeftParen)? {
+        return Ok((output, output_span));
     };
-    while let Some((span, token)) = clone.next_raw()? {
-        match token {
-            Token::RightParen => {
-                if depth <= 0 {
-                    *tokens = clone;
-                    return Ok(output);
-                } else {
-                    depth = depth - 1;
-                    output = output + ")";
+    loop {
+        let raw_result = tokens.next_raw();
+        match raw_result {
+            Ok(Some((span, token))) => {
+                if !started {
+                    started = true;
+                    output_span.start = span.start - 1;
+                }
+                output_span.end = span.end;
+                match token {
+                    Token::RightParen => {
+                        if depth <= 0 {
+                            break;
+                        } else {
+                            depth = depth - 1;
+                            output.push(')');
+                        }
+                    }
+                    Token::LeftParen => {
+                        depth = depth + 1;
+                        output.push('(');
+                    }
+                    _ => {
+                        let raw = tokens.get_span(span);
+                        if raw.contains("\n") {
+                            break;
+                        } else {
+                            output = output + raw;
+                        }
+                    }
                 }
             }
-            Token::LeftParen => {
-                depth = depth + 1;
-                output = output + "(";
+            Ok(None) => {
+                break;
+            }
+            Err(lex::Error::Unexpected(_, ch)) => {
+                output.push(ch);
+                output_span.end += 1;
             }
             _ => {
-                let raw = clone.get_span(span);
-                if raw.contains("\n") {
-                    *tokens = clone;
-                    return Ok(output);
-                } else {
-                    output = output + raw;
-                }
+                break;
             }
         }
     }
-    *tokens = clone;
-    Ok(output)
+    Ok((output, output_span))
 }
 
 fn err_expected(

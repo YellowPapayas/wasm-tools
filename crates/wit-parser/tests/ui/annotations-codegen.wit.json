@@ -1,0 +1,406 @@
+{
+  "worlds": [],
+  "interfaces": [
+    {
+      "name": "performance-hints",
+      "types": {
+        "small-buffer": 1,
+        "cache": 2,
+        "log-level": 3
+      },
+      "functions": {
+        "[constructor]cache": {
+          "name": "[constructor]cache",
+          "kind": {
+            "constructor": 2
+          },
+          "params": [
+            {
+              "name": "capacity",
+              "type": "u32"
+            }
+          ],
+          "result": 8,
+          "annotations": {
+            "contents": [
+              {
+                "label": "preallocate",
+                "value": "capacity = 1024"
+              }
+            ]
+          }
+        },
+        "[method]cache.get": {
+          "name": "[method]cache.get",
+          "kind": {
+            "method": 2
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 4
+            },
+            {
+              "name": "key",
+              "type": "string"
+            }
+          ],
+          "result": 5,
+          "annotations": {
+            "contents": [
+              {
+                "label": "hot",
+                "value": ""
+              },
+              {
+                "label": "inline",
+                "value": "always"
+              },
+              {
+                "label": "likely",
+                "value": "result = some"
+              }
+            ]
+          }
+        },
+        "[method]cache.clear": {
+          "name": "[method]cache.clear",
+          "kind": {
+            "method": 2
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 4
+            }
+          ],
+          "annotations": {
+            "contents": [
+              {
+                "label": "cold",
+                "value": ""
+              },
+              {
+                "label": "unlikely",
+                "value": ""
+              }
+            ]
+          }
+        },
+        "[method]cache.get-instance": {
+          "name": "[method]cache.get-instance",
+          "kind": {
+            "method": 2
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 4
+            }
+          ],
+          "result": 8,
+          "annotations": {
+            "contents": [
+              {
+                "label": "thread_safe",
+                "value": ""
+              },
+              {
+                "label": "atomic",
+                "value": ""
+              }
+            ]
+          }
+        },
+        "serialize-data": {
+          "name": "serialize-data",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "data",
+              "type": 0
+            }
+          ],
+          "result": 0,
+          "annotations": {
+            "contents": [
+              {
+                "label": "compress",
+                "value": "algorithm = \"lz4\""
+              },
+              {
+                "label": "max_size",
+                "value": "1048576"
+              }
+            ]
+          }
+        },
+        "fetch-remote": {
+          "name": "fetch-remote",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "url",
+              "type": "string"
+            }
+          ],
+          "result": 6,
+          "annotations": {
+            "contents": [
+              {
+                "label": "retry",
+                "value": "attempts = 3, backoff = \"exponential\""
+              },
+              {
+                "label": "timeout",
+                "value": "5000"
+              }
+            ]
+          }
+        },
+        "process-batch": {
+          "name": "process-batch",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "items",
+              "type": 7
+            }
+          ],
+          "result": "u32",
+          "annotations": {
+            "contents": [
+              {
+                "label": "benchmark",
+                "value": ""
+              },
+              {
+                "label": "perf_metric",
+                "value": "\"processing_time\""
+              },
+              {
+                "label": "trace_entry",
+                "value": ""
+              },
+              {
+                "label": "trace_exit",
+                "value": ""
+              }
+            ]
+          }
+        }
+      },
+      "docs": {
+        "contents": "Performance hints:\n    - #stack_allocated, #lazy_init, #preallocate for memory management\n    - #hot, #cold, #likely, #unlikely for optimization hints\n    - #compress, #retry, #timeout for I/O operations\n    - #benchmark, #perf_metric, #trace_entry/exit for profiling"
+      },
+      "annotations": {
+        "contents": [
+          {
+            "label": "cfg",
+            "value": "feature = \"advanced\""
+          }
+        ]
+      },
+      "package": 0
+    }
+  ],
+  "types": [
+    {
+      "name": null,
+      "kind": {
+        "list": "u8"
+      },
+      "owner": null,
+      "annotations": {
+        "contents": [
+          {
+            "label": "derive",
+            "value": "Debug"
+          },
+          {
+            "label": "stack_allocated",
+            "value": ""
+          },
+          {
+            "label": "size",
+            "value": "64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "small-buffer",
+      "kind": {
+        "record": {
+          "fields": [
+            {
+              "name": "data",
+              "type": 0
+            },
+            {
+              "name": "length",
+              "type": "u32"
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          {
+            "label": "derive",
+            "value": "Debug"
+          },
+          {
+            "label": "stack_allocated",
+            "value": ""
+          },
+          {
+            "label": "size",
+            "value": "64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "cache",
+      "kind": "resource",
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          {
+            "label": "derive",
+            "value": "Debug, Clone"
+          },
+          {
+            "label": "lazy_init",
+            "value": ""
+          }
+        ]
+      }
+    },
+    {
+      "name": "log-level",
+      "kind": {
+        "enum": {
+          "cases": [
+            {
+              "name": "trace",
+              "annotations": {
+                "contents": [
+                  {
+                    "label": "cold",
+                    "value": ""
+                  }
+                ]
+              }
+            },
+            {
+              "name": "debug",
+              "annotations": {
+                "contents": [
+                  {
+                    "label": "cold",
+                    "value": ""
+                  }
+                ]
+              }
+            },
+            {
+              "name": "info",
+              "annotations": {
+                "contents": [
+                  {
+                    "label": "hot",
+                    "value": ""
+                  }
+                ]
+              }
+            },
+            {
+              "name": "warn"
+            },
+            {
+              "name": "error",
+              "annotations": {
+                "contents": [
+                  {
+                    "label": "unlikely",
+                    "value": ""
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          {
+            "label": "derive",
+            "value": "Debug, Copy, Clone"
+          },
+          {
+            "label": "repr",
+            "value": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": null,
+      "kind": {
+        "handle": {
+          "borrow": 2
+        }
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "option": "string"
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "option": 0
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "list": "string"
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "handle": {
+          "own": 2
+        }
+      },
+      "owner": null
+    }
+  ],
+  "packages": [
+    {
+      "name": "test:annotations-codegen",
+      "interfaces": {
+        "performance-hints": 0
+      },
+      "worlds": {}
+    }
+  ]
+}

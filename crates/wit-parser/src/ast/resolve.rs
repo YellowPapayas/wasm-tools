@@ -217,8 +217,8 @@ impl<'a> Resolver<'a> {
                 id,
                 &interface.items,
                 &interface.docs,
-                &interface.annotations,
                 &interface.attributes,
+                &interface.annotations,
             )?;
         }
 
@@ -618,10 +618,10 @@ impl<'a> Resolver<'a> {
     fn resolve_world(&mut self, world_id: WorldId, world: &ast::World<'a>) -> Result<WorldId> {
         let docs = self.docs(&world.docs);
         self.worlds[world_id].docs = docs;
-        let annotations = self.annotations(&world.annotations);
-        self.worlds[world_id].annotations = annotations;
         let stability = self.stability(&world.attributes)?;
         self.worlds[world_id].stability = stability;
+        let annotations = self.annotations(&world.annotations);
+        self.worlds[world_id].annotations = annotations;
 
         self.resolve_types(
             TypeOwner::World(world_id),
@@ -666,7 +666,7 @@ impl<'a> Resolver<'a> {
         let mut imported_interfaces = HashSet::new();
         let mut exported_interfaces = HashSet::new();
         for item in world.items.iter() {
-            let (docs, annotations, attrs, kind, desc, spans, interfaces) = match item {
+            let (docs, attrs, annotations, kind, desc, spans, interfaces) = match item {
                 ast::WorldItem::Import(import) => (
                     &import.docs,
                     &import.annotations,
@@ -774,15 +774,15 @@ impl<'a> Resolver<'a> {
     fn resolve_world_item(
         &mut self,
         docs: &ast::Docs<'a>,
-        annotations: &ast::Annotations,
         attrs: &[ast::Attribute<'a>],
+        annotations: &ast::Annotations,
         kind: &ast::ExternKind<'a>,
     ) -> Result<WorldItem> {
         match kind {
             ast::ExternKind::Interface(name, items) => {
                 let prev = mem::take(&mut self.type_lookup);
                 let id = self.alloc_interface(name.span);
-                self.resolve_interface(id, items, docs, annotations, attrs)?;
+                self.resolve_interface(id, items, docs, attrs, annotations)?;
                 self.type_lookup = prev;
                 let stability = self.interfaces[id].stability.clone();
                 Ok(WorldItem::Interface { id, stability })
@@ -818,15 +818,15 @@ impl<'a> Resolver<'a> {
         interface_id: InterfaceId,
         fields: &[ast::InterfaceItem<'a>],
         docs: &ast::Docs<'a>,
-        annotations: &ast::Annotations,
         attrs: &[ast::Attribute<'a>],
+        annotations: &ast::Annotations,
     ) -> Result<()> {
         let docs = self.docs(docs);
         self.interfaces[interface_id].docs = docs;
-        let annotations = self.annotations(annotations);
-        self.interfaces[interface_id].annotations = annotations;
         let stability = self.stability(attrs)?;
         self.interfaces[interface_id].stability = stability;
+        let annotations = self.annotations(annotations);
+        self.interfaces[interface_id].annotations = annotations;
 
         self.resolve_types(
             TypeOwner::Interface(interface_id),
@@ -958,8 +958,8 @@ impl<'a> Resolver<'a> {
                 None => continue,
             };
             let docs = self.docs(&def.docs);
-            let annotations = self.annotations(&def.annotations);
             let stability = self.stability(&def.attributes)?;
+            let annotations = self.annotations(&def.annotations);
             let kind = self.resolve_type_def(&def.ty, &stability, &annotations)?;
             let id = self.types.alloc(TypeDef {
                 docs,
@@ -1109,8 +1109,8 @@ impl<'a> Resolver<'a> {
         kind: FunctionKind,
     ) -> Result<Function> {
         let docs = self.docs(docs);
-        let annotations = self.annotations(annotations);
         let stability = self.stability(attrs)?;
+        let annotations = self.annotations(annotations);
         let params = self.resolve_params(&func.params, &kind, func.span)?;
         let result = self.resolve_result(&func.result, &kind, func.span)?;
         Ok(Function {
@@ -1590,8 +1590,8 @@ impl<'a> Resolver<'a> {
             .annotations
             .iter()
             .map(|ann| Annotation {
-                label: ann.0.to_string(),
-                value: ann.1.to_string(),
+                label: ann.0.clone(),
+                value: ann.1.clone(),
             })
             .collect();
         Annotations { contents }
