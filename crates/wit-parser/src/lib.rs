@@ -414,8 +414,11 @@ pub struct World {
     pub docs: Docs,
 
     /// Annotations associated with this world declaration.
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Vec::is_empty"))]
-    pub annotations: Vec<Annotation>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 
     /// Stability annotation for this world itself.
     #[cfg_attr(
@@ -588,8 +591,11 @@ pub struct Interface {
     pub docs: Docs,
 
     /// Annotations associated with this interface.
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Vec::is_empty"))]
-    pub annotations: Vec<Annotation>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 
     /// Stability attribute for this interface.
     #[cfg_attr(
@@ -617,8 +623,11 @@ pub struct TypeDef {
         serde(skip_serializing_if = "Stability::is_unknown")
     )]
     pub stability: Stability,
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Vec::is_empty"))]
-    pub annotations: Vec<Annotation>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
@@ -740,8 +749,11 @@ pub struct Field {
     pub ty: Type,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Vec::is_empty"))]
-    pub annotations: Vec<Annotation>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
@@ -756,8 +768,11 @@ pub struct Flag {
     pub name: String,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Vec::is_empty"))]
-    pub annotations: Vec<Annotation>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -808,8 +823,11 @@ pub struct Case {
     pub ty: Option<Type>,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Vec::is_empty"))]
-    pub annotations: Vec<Annotation>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 impl Variant {
@@ -830,8 +848,11 @@ pub struct EnumCase {
     pub name: String,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Vec::is_empty"))]
-    pub annotations: Vec<Annotation>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 impl Enum {
@@ -872,9 +893,14 @@ impl Docs {
 
 #[derive(Clone, Default, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
-pub struct Annotation {
-    pub target: String,
-    pub value: String,
+pub struct Annotations {
+    pub contents: Vec<(String, String)>,
+}
+
+impl Annotations {
+    pub fn is_empty(&self) -> bool {
+        self.contents.is_empty()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -894,8 +920,11 @@ pub struct Function {
         serde(skip_serializing_if = "Stability::is_unknown")
     )]
     pub stability: Stability,
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Vec::is_empty"))]
-    pub annotations: Vec<Annotation>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

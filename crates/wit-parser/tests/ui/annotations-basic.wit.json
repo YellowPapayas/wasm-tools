@@ -17,12 +17,14 @@
         }
       },
       "package": 0,
-      "annotations": [
-        {
-          "target": "cfg",
-          "value": "feature = \"test-world\""
-        }
-      ]
+      "annotations": {
+        "contents": [
+          [
+            "cfg",
+            "feature = \"test-world\""
+          ]
+        ]
+      }
     }
   ],
   "interfaces": [
@@ -48,32 +50,36 @@
             }
           ],
           "result": 0,
-          "annotations": [
-            {
-              "target": "assert",
-              "value": "amount > 0, \"amount must be greater than zero\""
-            },
-            {
-              "target": "inline",
-              "value": ""
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "assert",
+                "amount > 0, \"amount must be greater than zero\""
+              ],
+              [
+                "inline",
+                ""
+              ]
+            ]
+          }
         },
         "get-status": {
           "name": "get-status",
           "kind": "freestanding",
           "params": [],
           "result": 3,
-          "annotations": [
-            {
-              "target": "must_use",
-              "value": ""
-            },
-            {
-              "target": "cfg",
-              "value": "feature = \"status-check\""
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "must_use",
+                ""
+              ],
+              [
+                "cfg",
+                "feature = \"status-check\""
+              ]
+            ]
+          }
         },
         "divide": {
           "name": "divide",
@@ -89,23 +95,27 @@
             }
           ],
           "result": "u32",
-          "annotations": [
-            {
-              "target": "assert",
-              "value": "divisor != 0, \"divisor cannot be zero\""
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "assert",
+                "divisor != 0, \"divisor cannot be zero\""
+              ]
+            ]
+          }
         }
       },
       "docs": {
         "contents": "Standard codegen hints:\n    - #derive, #serde, #repr for type generation\n    - #assert for runtime validation (e.g., divisor != 0)\n    - #cfg for feature gating\n    - #must_use, #inline, #no_mangle for code generation"
       },
-      "annotations": [
-        {
-          "target": "derive",
-          "value": "Debug, Clone, PartialEq"
-        }
-      ],
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug, Clone, PartialEq"
+          ]
+        ]
+      },
       "package": 0
     }
   ],
@@ -118,12 +128,14 @@
       "owner": {
         "interface": 0
       },
-      "annotations": [
-        {
-          "target": "derive",
-          "value": "Debug, Clone, Copy, Hash"
-        }
-      ]
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug, Clone, Copy, Hash"
+          ]
+        ]
+      }
     },
     {
       "name": "my-result",
@@ -137,12 +149,14 @@
             {
               "name": "message",
               "type": "string",
-              "annotations": [
-                {
-                  "target": "serde",
-                  "value": "rename = \"msg\""
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "serde",
+                    "rename = \"msg\""
+                  ]
+                ]
+              }
             }
           ]
         }
@@ -150,16 +164,18 @@
       "owner": {
         "interface": 0
       },
-      "annotations": [
-        {
-          "target": "derive",
-          "value": "Debug, Clone, PartialEq, Eq"
-        },
-        {
-          "target": "serde",
-          "value": "rename_all = \"camelCase\""
-        }
-      ]
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug, Clone, PartialEq, Eq"
+          ],
+          [
+            "serde",
+            "rename_all = \"camelCase\""
+          ]
+        ]
+      }
     },
     {
       "name": "status",
@@ -181,16 +197,18 @@
       "owner": {
         "interface": 0
       },
-      "annotations": [
-        {
-          "target": "derive",
-          "value": "Debug, Copy, Clone, PartialEq, Eq"
-        },
-        {
-          "target": "repr",
-          "value": "u8"
-        }
-      ]
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug, Copy, Clone, PartialEq, Eq"
+          ],
+          [
+            "repr",
+            "u8"
+          ]
+        ]
+      }
     },
     {
       "name": null,

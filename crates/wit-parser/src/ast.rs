@@ -779,21 +779,24 @@ impl<'a> Annotation<'a> {
         let mut output: Vec<Annotation<'a>> = vec![];
         while tokens.eat(Token::Hash)? {
             let id_span = tokens.expect(Token::Id)?;
+            let mut span_end = id_span.end;
             let target = tokens.get_span(id_span);
             let value_span = tokens.parse_parentheses()?;
-            let value = tokens
-                .get_span(value_span)
-                .trim_start_matches('(')
-                .trim_end_matches(')');
-            let annotations = Annotation {
+            let value = match value_span {
+                Some(span) => {
+                    span_end = span.end;
+                    tokens.get_span(span)
+                }
+                None => "".trim(),
+            };
+            output.push(Annotation {
                 target,
                 value,
                 span: Span {
                     start: id_span.start,
-                    end: value_span.end,
+                    end: span_end,
                 },
-            };
-            output.push(annotations);
+            });
         }
         Ok(output)
     }

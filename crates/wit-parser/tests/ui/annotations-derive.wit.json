@@ -19,20 +19,22 @@
             }
           ],
           "result": "u64",
-          "annotations": [
-            {
-              "target": "trace_calls",
-              "value": ""
-            },
-            {
-              "target": "memoize",
-              "value": ""
-            },
-            {
-              "target": "cache_result",
-              "value": "ttl = 60"
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "trace_calls",
+                ""
+              ],
+              [
+                "memoize",
+                ""
+              ],
+              [
+                "cache_result",
+                "ttl = 60"
+              ]
+            ]
+          }
         },
         "process-buffer": {
           "name": "process-buffer",
@@ -44,20 +46,22 @@
             }
           ],
           "result": "u32",
-          "annotations": [
-            {
-              "target": "zero_copy",
-              "value": ""
-            },
-            {
-              "target": "non_null",
-              "value": "data"
-            },
-            {
-              "target": "min_length",
-              "value": "data, 1"
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "zero_copy",
+                ""
+              ],
+              [
+                "non_null",
+                "data"
+              ],
+              [
+                "min_length",
+                "data, 1"
+              ]
+            ]
+          }
         },
         "authenticate": {
           "name": "authenticate",
@@ -73,16 +77,18 @@
             }
           ],
           "result": "bool",
-          "annotations": [
-            {
-              "target": "rate_limit",
-              "value": "100, per_second"
-            },
-            {
-              "target": "log_params",
-              "value": ""
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "rate_limit",
+                "100, per_second"
+              ],
+              [
+                "log_params",
+                ""
+              ]
+            ]
+          }
         }
       },
       "docs": {
@@ -100,36 +106,42 @@
             {
               "name": "username",
               "type": "string",
-              "annotations": [
-                {
-                  "target": "non_empty",
-                  "value": ""
-                },
-                {
-                  "target": "max_length",
-                  "value": "255"
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "non_empty",
+                    ""
+                  ],
+                  [
+                    "max_length",
+                    "255"
+                  ]
+                ]
+              }
             },
             {
               "name": "email",
               "type": "string",
-              "annotations": [
-                {
-                  "target": "email_format",
-                  "value": ""
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "email_format",
+                    ""
+                  ]
+                ]
+              }
             },
             {
               "name": "age",
               "type": "u8",
-              "annotations": [
-                {
-                  "target": "range",
-                  "value": "18, 120"
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "range",
+                    "18, 120"
+                  ]
+                ]
+              }
             }
           ]
         }
@@ -137,16 +149,18 @@
       "owner": {
         "interface": 0
       },
-      "annotations": [
-        {
-          "target": "derive",
-          "value": "Debug, Clone"
-        },
-        {
-          "target": "validate_utf8",
-          "value": ""
-        }
-      ]
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug, Clone"
+          ],
+          [
+            "validate_utf8",
+            ""
+          ]
+        ]
+      }
     },
     {
       "name": "vector3",
@@ -156,32 +170,38 @@
             {
               "name": "x",
               "type": "f32",
-              "annotations": [
-                {
-                  "target": "finite",
-                  "value": ""
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "finite",
+                    ""
+                  ]
+                ]
+              }
             },
             {
               "name": "y",
               "type": "f32",
-              "annotations": [
-                {
-                  "target": "finite",
-                  "value": ""
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "finite",
+                    ""
+                  ]
+                ]
+              }
             },
             {
               "name": "z",
               "type": "f32",
-              "annotations": [
-                {
-                  "target": "finite",
-                  "value": ""
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "finite",
+                    ""
+                  ]
+                ]
+              }
             }
           ]
         }
@@ -189,20 +209,22 @@
       "owner": {
         "interface": 0
       },
-      "annotations": [
-        {
-          "target": "derive",
-          "value": "Debug, Copy, Clone"
-        },
-        {
-          "target": "repr",
-          "value": "C"
-        },
-        {
-          "target": "align",
-          "value": "16"
-        }
-      ]
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug, Copy, Clone"
+          ],
+          [
+            "repr",
+            "C"
+          ],
+          [
+            "align",
+            "16"
+          ]
+        ]
+      }
     },
     {
       "name": "feature-flags",
@@ -211,30 +233,36 @@
           "flags": [
             {
               "name": "ai-mode",
-              "annotations": [
-                {
-                  "target": "experimental",
-                  "value": ""
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "experimental",
+                    ""
+                  ]
+                ]
+              }
             },
             {
               "name": "legacy-api",
-              "annotations": [
-                {
-                  "target": "deprecated",
-                  "value": ""
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "deprecated",
+                    ""
+                  ]
+                ]
+              }
             },
             {
               "name": "core-features",
-              "annotations": [
-                {
-                  "target": "stable",
-                  "value": ""
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "stable",
+                    ""
+                  ]
+                ]
+              }
             }
           ]
         }
@@ -242,12 +270,14 @@
       "owner": {
         "interface": 0
       },
-      "annotations": [
-        {
-          "target": "derive",
-          "value": "Debug"
-        }
-      ]
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug"
+          ]
+        ]
+      }
     },
     {
       "name": null,

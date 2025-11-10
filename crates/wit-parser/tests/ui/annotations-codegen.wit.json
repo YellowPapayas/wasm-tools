@@ -21,12 +21,14 @@
             }
           ],
           "result": 8,
-          "annotations": [
-            {
-              "target": "preallocate",
-              "value": "capacity = 1024"
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "preallocate",
+                "capacity = 1024"
+              ]
+            ]
+          }
         },
         "[method]cache.get": {
           "name": "[method]cache.get",
@@ -44,20 +46,22 @@
             }
           ],
           "result": 5,
-          "annotations": [
-            {
-              "target": "hot",
-              "value": ""
-            },
-            {
-              "target": "inline",
-              "value": "always"
-            },
-            {
-              "target": "likely",
-              "value": "result = some"
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "hot",
+                ""
+              ],
+              [
+                "inline",
+                "always"
+              ],
+              [
+                "likely",
+                "result = some"
+              ]
+            ]
+          }
         },
         "[method]cache.clear": {
           "name": "[method]cache.clear",
@@ -70,16 +74,18 @@
               "type": 4
             }
           ],
-          "annotations": [
-            {
-              "target": "cold",
-              "value": ""
-            },
-            {
-              "target": "unlikely",
-              "value": ""
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "cold",
+                ""
+              ],
+              [
+                "unlikely",
+                ""
+              ]
+            ]
+          }
         },
         "[method]cache.get-instance": {
           "name": "[method]cache.get-instance",
@@ -93,16 +99,18 @@
             }
           ],
           "result": 8,
-          "annotations": [
-            {
-              "target": "thread_safe",
-              "value": ""
-            },
-            {
-              "target": "atomic",
-              "value": ""
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "thread_safe",
+                ""
+              ],
+              [
+                "atomic",
+                ""
+              ]
+            ]
+          }
         },
         "serialize-data": {
           "name": "serialize-data",
@@ -114,16 +122,18 @@
             }
           ],
           "result": 0,
-          "annotations": [
-            {
-              "target": "compress",
-              "value": "algorithm = \"lz4\""
-            },
-            {
-              "target": "max_size",
-              "value": "1048576"
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "compress",
+                "algorithm = \"lz4\""
+              ],
+              [
+                "max_size",
+                "1048576"
+              ]
+            ]
+          }
         },
         "fetch-remote": {
           "name": "fetch-remote",
@@ -135,16 +145,18 @@
             }
           ],
           "result": 6,
-          "annotations": [
-            {
-              "target": "retry",
-              "value": "attempts = 3, backoff = \"exponential\""
-            },
-            {
-              "target": "timeout",
-              "value": "5000"
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "retry",
+                "attempts = 3, backoff = \"exponential\""
+              ],
+              [
+                "timeout",
+                "5000"
+              ]
+            ]
+          }
         },
         "process-batch": {
           "name": "process-batch",
@@ -156,35 +168,39 @@
             }
           ],
           "result": "u32",
-          "annotations": [
-            {
-              "target": "benchmark",
-              "value": ""
-            },
-            {
-              "target": "perf_metric",
-              "value": "\"processing_time\""
-            },
-            {
-              "target": "trace_entry",
-              "value": ""
-            },
-            {
-              "target": "trace_exit",
-              "value": ""
-            }
-          ]
+          "annotations": {
+            "contents": [
+              [
+                "benchmark",
+                ""
+              ],
+              [
+                "perf_metric",
+                "\"processing_time\""
+              ],
+              [
+                "trace_entry",
+                ""
+              ],
+              [
+                "trace_exit",
+                ""
+              ]
+            ]
+          }
         }
       },
       "docs": {
         "contents": "Performance hints:\n    - #stack_allocated, #lazy_init, #preallocate for memory management\n    - #hot, #cold, #likely, #unlikely for optimization hints\n    - #compress, #retry, #timeout for I/O operations\n    - #benchmark, #perf_metric, #trace_entry/exit for profiling"
       },
-      "annotations": [
-        {
-          "target": "cfg",
-          "value": "feature = \"advanced\""
-        }
-      ],
+      "annotations": {
+        "contents": [
+          [
+            "cfg",
+            "feature = \"advanced\""
+          ]
+        ]
+      },
       "package": 0
     }
   ],
@@ -195,20 +211,22 @@
         "list": "u8"
       },
       "owner": null,
-      "annotations": [
-        {
-          "target": "derive",
-          "value": "Debug"
-        },
-        {
-          "target": "stack_allocated",
-          "value": ""
-        },
-        {
-          "target": "size",
-          "value": "64"
-        }
-      ]
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug"
+          ],
+          [
+            "stack_allocated",
+            ""
+          ],
+          [
+            "size",
+            "64"
+          ]
+        ]
+      }
     },
     {
       "name": "small-buffer",
@@ -229,20 +247,22 @@
       "owner": {
         "interface": 0
       },
-      "annotations": [
-        {
-          "target": "derive",
-          "value": "Debug"
-        },
-        {
-          "target": "stack_allocated",
-          "value": ""
-        },
-        {
-          "target": "size",
-          "value": "64"
-        }
-      ]
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug"
+          ],
+          [
+            "stack_allocated",
+            ""
+          ],
+          [
+            "size",
+            "64"
+          ]
+        ]
+      }
     },
     {
       "name": "cache",
@@ -250,16 +270,18 @@
       "owner": {
         "interface": 0
       },
-      "annotations": [
-        {
-          "target": "derive",
-          "value": "Debug, Clone"
-        },
-        {
-          "target": "lazy_init",
-          "value": ""
-        }
-      ]
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug, Clone"
+          ],
+          [
+            "lazy_init",
+            ""
+          ]
+        ]
+      }
     },
     {
       "name": "log-level",
@@ -268,42 +290,50 @@
           "cases": [
             {
               "name": "trace",
-              "annotations": [
-                {
-                  "target": "cold",
-                  "value": ""
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "cold",
+                    ""
+                  ]
+                ]
+              }
             },
             {
               "name": "debug",
-              "annotations": [
-                {
-                  "target": "cold",
-                  "value": ""
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "cold",
+                    ""
+                  ]
+                ]
+              }
             },
             {
               "name": "info",
-              "annotations": [
-                {
-                  "target": "hot",
-                  "value": ""
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "hot",
+                    ""
+                  ]
+                ]
+              }
             },
             {
               "name": "warn"
             },
             {
               "name": "error",
-              "annotations": [
-                {
-                  "target": "unlikely",
-                  "value": ""
-                }
-              ]
+              "annotations": {
+                "contents": [
+                  [
+                    "unlikely",
+                    ""
+                  ]
+                ]
+              }
             }
           ]
         }
@@ -311,16 +341,18 @@
       "owner": {
         "interface": 0
       },
-      "annotations": [
-        {
-          "target": "derive",
-          "value": "Debug, Copy, Clone"
-        },
-        {
-          "target": "repr",
-          "value": "u32"
-        }
-      ]
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug, Copy, Clone"
+          ],
+          [
+            "repr",
+            "u32"
+          ]
+        ]
+      }
     },
     {
       "name": null,

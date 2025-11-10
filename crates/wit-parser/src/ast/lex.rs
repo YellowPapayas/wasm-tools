@@ -345,16 +345,12 @@ impl<'a> Tokenizer<'a> {
         Ok(Some((Span { start, end }, token)))
     }
 
-    pub fn parse_parentheses(&mut self) -> Result<Span, Error> {
-        let mut clone = self.clone();
-        let mut span = match clone.next()? {
-            Some((span, Token::LeftParen)) => {
-                *self = clone;
-                span
-            }
-            Some(_) | None => return Ok(Span { start: 0, end: 0 }),
-        };
-
+    pub fn parse_parentheses(&mut self) -> Result<Option<Span>, Error> {
+        if !self.eat(Token::LeftParen)? {
+            return Ok(None);
+        }
+        let mut started = false;
+        let mut span: Span = Span { start: 0, end: 0 };
         let mut depth = 0;
 
         loop {
@@ -368,18 +364,22 @@ impl<'a> Tokenizer<'a> {
             };
 
             let current_pos = self.span_offset + u32::try_from(ch_index).unwrap();
-            span.end = current_pos + ch.len_utf8() as u32;
+            if !started {
+                started = true;
+                span.start = current_pos;
+            }
 
             match ch {
                 '(' => depth += 1,
                 ')' => {
                     if depth == 0 {
-                        return Ok(span);
+                        return Ok(Some(span));
                     }
                     depth -= 1;
                 }
                 _ => {}
             }
+            span.end = current_pos + ch.len_utf8() as u32;
         }
     }
 

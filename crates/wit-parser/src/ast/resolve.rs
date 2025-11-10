@@ -1189,7 +1189,7 @@ impl<'a> Resolver<'a> {
         &mut self,
         ty: &ast::Type<'_>,
         stability: &Stability,
-        annotations: &Vec<Annotation>,
+        annotations: &Annotations,
     ) -> Result<TypeDefKind> {
         Ok(match ty {
             ast::Type::Bool(_) => TypeDefKind::Type(Type::Bool),
@@ -1447,7 +1447,7 @@ impl<'a> Resolver<'a> {
         &mut self,
         ty: &super::Type<'_>,
         stability: &Stability,
-        annotations: &Vec<Annotation>,
+        annotations: &Annotations,
     ) -> Result<Type> {
         // Resources must be declared at the top level to have their methods
         // processed appropriately, but resources also shouldn't show up
@@ -1475,7 +1475,7 @@ impl<'a> Resolver<'a> {
         &mut self,
         ty: Option<&super::Type<'_>>,
         stability: &Stability,
-        annotations: &Vec<Annotation>,
+        annotations: &Annotations,
     ) -> Result<Option<Type>> {
         match ty {
             Some(ty) => Ok(Some(self.resolve_type(ty, stability, annotations)?)),
@@ -1581,15 +1581,13 @@ impl<'a> Resolver<'a> {
         Docs { contents }
     }
 
-    fn annotations(&mut self, annotations: &[super::Annotation]) -> Vec<Annotation> {
-        let mut contents: Vec<Annotation> = vec![];
+    fn annotations(&mut self, annotations: &[super::Annotation]) -> Annotations {
+        let mut ann: Annotations = Annotations { contents: vec![] };
         for annotation in annotations {
-            contents.push(Annotation {
-                target: annotation.target.to_string(),
-                value: annotation.value.to_string(),
-            });
+            ann.contents
+                .push((annotation.target.to_string(), annotation.value.to_string()));
         }
-        contents
+        ann
     }
 
     fn stability(&mut self, attrs: &[ast::Attribute<'_>]) -> Result<Stability> {
