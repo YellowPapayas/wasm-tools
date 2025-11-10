@@ -21,14 +21,12 @@
             }
           ],
           "result": 8,
-          "annotations": {
-            "contents": [
-              {
-                "label": "preallocate",
-                "value": "capacity = 1024"
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "preallocate",
+              "value": "capacity = 1024"
+            }
+          ]
         },
         "[method]cache.get": {
           "name": "[method]cache.get",
@@ -46,22 +44,20 @@
             }
           ],
           "result": 5,
-          "annotations": {
-            "contents": [
-              {
-                "label": "hot",
-                "value": ""
-              },
-              {
-                "label": "inline",
-                "value": "always"
-              },
-              {
-                "label": "likely",
-                "value": "result = some"
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "hot",
+              "value": ""
+            },
+            {
+              "target": "inline",
+              "value": "always"
+            },
+            {
+              "target": "likely",
+              "value": "result = some"
+            }
+          ]
         },
         "[method]cache.clear": {
           "name": "[method]cache.clear",
@@ -74,18 +70,16 @@
               "type": 4
             }
           ],
-          "annotations": {
-            "contents": [
-              {
-                "label": "cold",
-                "value": ""
-              },
-              {
-                "label": "unlikely",
-                "value": ""
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "cold",
+              "value": ""
+            },
+            {
+              "target": "unlikely",
+              "value": ""
+            }
+          ]
         },
         "[method]cache.get-instance": {
           "name": "[method]cache.get-instance",
@@ -99,18 +93,16 @@
             }
           ],
           "result": 8,
-          "annotations": {
-            "contents": [
-              {
-                "label": "thread_safe",
-                "value": ""
-              },
-              {
-                "label": "atomic",
-                "value": ""
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "thread_safe",
+              "value": ""
+            },
+            {
+              "target": "atomic",
+              "value": ""
+            }
+          ]
         },
         "serialize-data": {
           "name": "serialize-data",
@@ -122,18 +114,16 @@
             }
           ],
           "result": 0,
-          "annotations": {
-            "contents": [
-              {
-                "label": "compress",
-                "value": "algorithm = \"lz4\""
-              },
-              {
-                "label": "max_size",
-                "value": "1048576"
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "compress",
+              "value": "algorithm = \"lz4\""
+            },
+            {
+              "target": "max_size",
+              "value": "1048576"
+            }
+          ]
         },
         "fetch-remote": {
           "name": "fetch-remote",
@@ -145,18 +135,16 @@
             }
           ],
           "result": 6,
-          "annotations": {
-            "contents": [
-              {
-                "label": "retry",
-                "value": "attempts = 3, backoff = \"exponential\""
-              },
-              {
-                "label": "timeout",
-                "value": "5000"
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "retry",
+              "value": "attempts = 3, backoff = \"exponential\""
+            },
+            {
+              "target": "timeout",
+              "value": "5000"
+            }
+          ]
         },
         "process-batch": {
           "name": "process-batch",
@@ -168,39 +156,35 @@
             }
           ],
           "result": "u32",
-          "annotations": {
-            "contents": [
-              {
-                "label": "benchmark",
-                "value": ""
-              },
-              {
-                "label": "perf_metric",
-                "value": "\"processing_time\""
-              },
-              {
-                "label": "trace_entry",
-                "value": ""
-              },
-              {
-                "label": "trace_exit",
-                "value": ""
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "benchmark",
+              "value": ""
+            },
+            {
+              "target": "perf_metric",
+              "value": "\"processing_time\""
+            },
+            {
+              "target": "trace_entry",
+              "value": ""
+            },
+            {
+              "target": "trace_exit",
+              "value": ""
+            }
+          ]
         }
       },
       "docs": {
         "contents": "Performance hints:\n    - #stack_allocated, #lazy_init, #preallocate for memory management\n    - #hot, #cold, #likely, #unlikely for optimization hints\n    - #compress, #retry, #timeout for I/O operations\n    - #benchmark, #perf_metric, #trace_entry/exit for profiling"
       },
-      "annotations": {
-        "contents": [
-          {
-            "label": "cfg",
-            "value": "feature = \"advanced\""
-          }
-        ]
-      },
+      "annotations": [
+        {
+          "target": "cfg",
+          "value": "feature = \"advanced\""
+        }
+      ],
       "package": 0
     }
   ],
@@ -211,22 +195,20 @@
         "list": "u8"
       },
       "owner": null,
-      "annotations": {
-        "contents": [
-          {
-            "label": "derive",
-            "value": "Debug"
-          },
-          {
-            "label": "stack_allocated",
-            "value": ""
-          },
-          {
-            "label": "size",
-            "value": "64"
-          }
-        ]
-      }
+      "annotations": [
+        {
+          "target": "derive",
+          "value": "Debug"
+        },
+        {
+          "target": "stack_allocated",
+          "value": ""
+        },
+        {
+          "target": "size",
+          "value": "64"
+        }
+      ]
     },
     {
       "name": "small-buffer",
@@ -247,22 +229,20 @@
       "owner": {
         "interface": 0
       },
-      "annotations": {
-        "contents": [
-          {
-            "label": "derive",
-            "value": "Debug"
-          },
-          {
-            "label": "stack_allocated",
-            "value": ""
-          },
-          {
-            "label": "size",
-            "value": "64"
-          }
-        ]
-      }
+      "annotations": [
+        {
+          "target": "derive",
+          "value": "Debug"
+        },
+        {
+          "target": "stack_allocated",
+          "value": ""
+        },
+        {
+          "target": "size",
+          "value": "64"
+        }
+      ]
     },
     {
       "name": "cache",
@@ -270,18 +250,16 @@
       "owner": {
         "interface": 0
       },
-      "annotations": {
-        "contents": [
-          {
-            "label": "derive",
-            "value": "Debug, Clone"
-          },
-          {
-            "label": "lazy_init",
-            "value": ""
-          }
-        ]
-      }
+      "annotations": [
+        {
+          "target": "derive",
+          "value": "Debug, Clone"
+        },
+        {
+          "target": "lazy_init",
+          "value": ""
+        }
+      ]
     },
     {
       "name": "log-level",
@@ -290,50 +268,42 @@
           "cases": [
             {
               "name": "trace",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "cold",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "cold",
+                  "value": ""
+                }
+              ]
             },
             {
               "name": "debug",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "cold",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "cold",
+                  "value": ""
+                }
+              ]
             },
             {
               "name": "info",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "hot",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "hot",
+                  "value": ""
+                }
+              ]
             },
             {
               "name": "warn"
             },
             {
               "name": "error",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "unlikely",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "unlikely",
+                  "value": ""
+                }
+              ]
             }
           ]
         }
@@ -341,18 +311,16 @@
       "owner": {
         "interface": 0
       },
-      "annotations": {
-        "contents": [
-          {
-            "label": "derive",
-            "value": "Debug, Copy, Clone"
-          },
-          {
-            "label": "repr",
-            "value": "u32"
-          }
-        ]
-      }
+      "annotations": [
+        {
+          "target": "derive",
+          "value": "Debug, Copy, Clone"
+        },
+        {
+          "target": "repr",
+          "value": "u32"
+        }
+      ]
     },
     {
       "name": null,

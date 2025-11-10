@@ -111,6 +111,7 @@ pub enum Error {
     InvalidEscape(u32, char),
     Unexpected(u32, char),
     UnterminatedComment(u32),
+    UnclosedParentheses(u32),
     Wanted {
         at: u32,
         expected: &'static str,
@@ -344,6 +345,44 @@ impl<'a> Tokenizer<'a> {
         Ok(Some((Span { start, end }, token)))
     }
 
+    pub fn parse_parentheses(&mut self) -> Result<Span, Error> {
+        let mut clone = self.clone();
+        let mut span = match clone.next()? {
+            Some((span, Token::LeftParen)) => {
+                *self = clone;
+                span
+            }
+            Some(_) | None => return Ok(Span { start: 0, end: 0 }),
+        };
+
+        let mut depth = 0;
+
+        loop {
+            let (ch_index, ch) = match self.chars.next() {
+                Some(pair) => pair,
+                None => {
+                    return Err(Error::UnclosedParentheses(
+                        self.span_offset + u32::try_from(self.input.len()).unwrap(),
+                    ));
+                }
+            };
+
+            let current_pos = self.span_offset + u32::try_from(ch_index).unwrap();
+            span.end = current_pos + ch.len_utf8() as u32;
+
+            match ch {
+                '(' => depth += 1,
+                ')' => {
+                    if depth == 0 {
+                        return Ok(span);
+                    }
+                    depth -= 1;
+                }
+                _ => {}
+            }
+        }
+    }
+
     pub fn eat(&mut self, expected: Token) -> Result<bool, Error> {
         let mut other = self.clone();
         match other.next()? {
@@ -520,7 +559,7 @@ impl Token {
         match self {
             Whitespace => "whitespace",
             Comment => "a comment",
-            Hash => "a hash",
+            Hash => "'#'",
             Equals => "'='",
             Comma => "','",
             Colon => "':'",
@@ -595,6 +634,7 @@ impl fmt::Display for Error {
         match self {
             Error::Unexpected(_, ch) => write!(f, "unexpected character {ch:?}"),
             Error::UnterminatedComment(_) => write!(f, "unterminated block comment"),
+            Error::UnclosedParentheses(_) => write!(f, "unclosed parentheses"),
             Error::Wanted {
                 expected, found, ..
             } => write!(f, "expected {expected}, found {found}"),

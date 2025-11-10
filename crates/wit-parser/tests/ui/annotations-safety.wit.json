@@ -26,18 +26,16 @@
             }
           ],
           "result": 7,
-          "annotations": {
-            "contents": [
-              {
-                "label": "validate_host",
-                "value": ""
-              },
-              {
-                "label": "require_tls",
-                "value": ""
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "validate_host",
+              "value": ""
+            },
+            {
+              "target": "require_tls",
+              "value": ""
+            }
+          ]
         },
         "[method]secure-connection.send-encrypted": {
           "name": "[method]secure-connection.send-encrypted",
@@ -55,22 +53,20 @@
             }
           ],
           "result": "bool",
-          "annotations": {
-            "contents": [
-              {
-                "label": "encrypt",
-                "value": "algorithm = \"aes-256-gcm\""
-              },
-              {
-                "label": "non_null",
-                "value": "payload"
-              },
-              {
-                "label": "max_size",
-                "value": "payload, 65536"
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "encrypt",
+              "value": "algorithm = \"aes-256-gcm\""
+            },
+            {
+              "target": "non_null",
+              "value": "payload"
+            },
+            {
+              "target": "max_size",
+              "value": "payload, 65536"
+            }
+          ]
         },
         "[method]secure-connection.receive-encrypted": {
           "name": "[method]secure-connection.receive-encrypted",
@@ -84,18 +80,16 @@
             }
           ],
           "result": 6,
-          "annotations": {
-            "contents": [
-              {
-                "label": "decrypt",
-                "value": ""
-              },
-              {
-                "label": "verify_signature",
-                "value": ""
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "decrypt",
+              "value": ""
+            },
+            {
+              "target": "verify_signature",
+              "value": ""
+            }
+          ]
         },
         "[method]secure-connection.disconnect": {
           "name": "[method]secure-connection.disconnect",
@@ -108,18 +102,16 @@
               "type": 4
             }
           ],
-          "annotations": {
-            "contents": [
-              {
-                "label": "audit_log",
-                "value": ""
-              },
-              {
-                "label": "inject_after",
-                "value": "\"security::log_disconnect(&self.host);\""
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "audit_log",
+              "value": ""
+            },
+            {
+              "target": "inject_after",
+              "value": "\"security::log_disconnect(&self.host);\""
+            }
+          ]
         },
         "delete-user": {
           "name": "delete-user",
@@ -131,22 +123,20 @@
             }
           ],
           "result": "bool",
-          "annotations": {
-            "contents": [
-              {
-                "label": "authorize",
-                "value": "level = \"admin\""
-              },
-              {
-                "label": "audit_log",
-                "value": ""
-              },
-              {
-                "label": "rate_limit",
-                "value": "10, per_minute"
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "authorize",
+              "value": "level = \"admin\""
+            },
+            {
+              "target": "audit_log",
+              "value": ""
+            },
+            {
+              "target": "rate_limit",
+              "value": "10, per_minute"
+            }
+          ]
         },
         "render-user-content": {
           "name": "render-user-content",
@@ -158,22 +148,20 @@
             }
           ],
           "result": "string",
-          "annotations": {
-            "contents": [
-              {
-                "label": "escape_html",
-                "value": ""
-              },
-              {
-                "label": "sanitize",
-                "value": "mode = \"html\""
-              },
-              {
-                "label": "max_length",
-                "value": "input, 10000"
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "escape_html",
+              "value": ""
+            },
+            {
+              "target": "sanitize",
+              "value": "mode = \"html\""
+            },
+            {
+              "target": "max_length",
+              "value": "input, 10000"
+            }
+          ]
         },
         "compare-secrets": {
           "name": "compare-secrets",
@@ -189,36 +177,32 @@
             }
           ],
           "result": "bool",
-          "annotations": {
-            "contents": [
-              {
-                "label": "constant_time",
-                "value": ""
-              },
-              {
-                "label": "no_short_circuit",
-                "value": ""
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "constant_time",
+              "value": ""
+            },
+            {
+              "target": "no_short_circuit",
+              "value": ""
+            }
+          ]
         },
         "get-random-number": {
           "name": "get-random-number",
           "kind": "freestanding",
           "params": [],
           "result": "u32",
-          "annotations": {
-            "contents": [
-              {
-                "label": "test_only",
-                "value": ""
-              },
-              {
-                "label": "mock_return",
-                "value": "42"
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "test_only",
+              "value": ""
+            },
+            {
+              "target": "mock_return",
+              "value": "42"
+            }
+          ]
         }
       },
       "docs": {
@@ -236,22 +220,20 @@
             {
               "name": "path",
               "type": "string",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "sanitize",
-                    "value": "mode = \"path\""
-                  },
-                  {
-                    "label": "no_path_traversal",
-                    "value": ""
-                  },
-                  {
-                    "label": "max_length",
-                    "value": "4096"
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "sanitize",
+                  "value": "mode = \"path\""
+                },
+                {
+                  "target": "no_path_traversal",
+                  "value": ""
+                },
+                {
+                  "target": "max_length",
+                  "value": "4096"
+                }
+              ]
             }
           ]
         }
@@ -259,18 +241,16 @@
       "owner": {
         "interface": 0
       },
-      "annotations": {
-        "contents": [
-          {
-            "label": "derive",
-            "value": "Debug"
-          },
-          {
-            "label": "validate_on_construct",
-            "value": ""
-          }
-        ]
-      }
+      "annotations": [
+        {
+          "target": "derive",
+          "value": "Debug"
+        },
+        {
+          "target": "validate_on_construct",
+          "value": ""
+        }
+      ]
     },
     {
       "name": "credentials",
@@ -280,30 +260,26 @@
             {
               "name": "token",
               "type": "string",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "non_empty",
-                    "value": ""
-                  },
-                  {
-                    "label": "validate_base64",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "non_empty",
+                  "value": ""
+                },
+                {
+                  "target": "validate_base64",
+                  "value": ""
+                }
+              ]
             },
             {
               "name": "expires-in",
               "type": "u32",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "range",
-                    "value": "1, 3600"
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "range",
+                  "value": "1, 3600"
+                }
+              ]
             }
           ]
         }
@@ -311,22 +287,20 @@
       "owner": {
         "interface": 0
       },
-      "annotations": {
-        "contents": [
-          {
-            "label": "derive",
-            "value": "Debug, Clone"
-          },
-          {
-            "label": "zeroize_on_drop",
-            "value": ""
-          },
-          {
-            "label": "sensitive",
-            "value": ""
-          }
-        ]
-      }
+      "annotations": [
+        {
+          "target": "derive",
+          "value": "Debug, Clone"
+        },
+        {
+          "target": "zeroize_on_drop",
+          "value": ""
+        },
+        {
+          "target": "sensitive",
+          "value": ""
+        }
+      ]
     },
     {
       "name": "secure-connection",
@@ -334,14 +308,12 @@
       "owner": {
         "interface": 0
       },
-      "annotations": {
-        "contents": [
-          {
-            "label": "derive",
-            "value": "Debug"
-          }
-        ]
-      }
+      "annotations": [
+        {
+          "target": "derive",
+          "value": "Debug"
+        }
+      ]
     },
     {
       "name": "access-level",
@@ -350,14 +322,12 @@
           "cases": [
             {
               "name": "guest",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "min_privilege",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "min_privilege",
+                  "value": ""
+                }
+              ]
             },
             {
               "name": "user"
@@ -367,14 +337,12 @@
             },
             {
               "name": "super-admin",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "require_mfa",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "require_mfa",
+                  "value": ""
+                }
+              ]
             }
           ]
         }
@@ -382,18 +350,16 @@
       "owner": {
         "interface": 0
       },
-      "annotations": {
-        "contents": [
-          {
-            "label": "derive",
-            "value": "Debug, Copy, Clone"
-          },
-          {
-            "label": "repr",
-            "value": "u8"
-          }
-        ]
-      }
+      "annotations": [
+        {
+          "target": "derive",
+          "value": "Debug, Copy, Clone"
+        },
+        {
+          "target": "repr",
+          "value": "u8"
+        }
+      ]
     },
     {
       "name": null,

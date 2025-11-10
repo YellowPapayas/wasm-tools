@@ -19,22 +19,20 @@
             }
           ],
           "result": "u64",
-          "annotations": {
-            "contents": [
-              {
-                "label": "trace_calls",
-                "value": ""
-              },
-              {
-                "label": "memoize",
-                "value": ""
-              },
-              {
-                "label": "cache_result",
-                "value": "ttl = 60"
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "trace_calls",
+              "value": ""
+            },
+            {
+              "target": "memoize",
+              "value": ""
+            },
+            {
+              "target": "cache_result",
+              "value": "ttl = 60"
+            }
+          ]
         },
         "process-buffer": {
           "name": "process-buffer",
@@ -46,22 +44,20 @@
             }
           ],
           "result": "u32",
-          "annotations": {
-            "contents": [
-              {
-                "label": "zero_copy",
-                "value": ""
-              },
-              {
-                "label": "non_null",
-                "value": "data"
-              },
-              {
-                "label": "min_length",
-                "value": "data, 1"
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "zero_copy",
+              "value": ""
+            },
+            {
+              "target": "non_null",
+              "value": "data"
+            },
+            {
+              "target": "min_length",
+              "value": "data, 1"
+            }
+          ]
         },
         "authenticate": {
           "name": "authenticate",
@@ -77,18 +73,16 @@
             }
           ],
           "result": "bool",
-          "annotations": {
-            "contents": [
-              {
-                "label": "rate_limit",
-                "value": "100, per_second"
-              },
-              {
-                "label": "log_params",
-                "value": ""
-              }
-            ]
-          }
+          "annotations": [
+            {
+              "target": "rate_limit",
+              "value": "100, per_second"
+            },
+            {
+              "target": "log_params",
+              "value": ""
+            }
+          ]
         }
       },
       "docs": {
@@ -106,42 +100,36 @@
             {
               "name": "username",
               "type": "string",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "non_empty",
-                    "value": ""
-                  },
-                  {
-                    "label": "max_length",
-                    "value": "255"
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "non_empty",
+                  "value": ""
+                },
+                {
+                  "target": "max_length",
+                  "value": "255"
+                }
+              ]
             },
             {
               "name": "email",
               "type": "string",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "email_format",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "email_format",
+                  "value": ""
+                }
+              ]
             },
             {
               "name": "age",
               "type": "u8",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "range",
-                    "value": "18, 120"
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "range",
+                  "value": "18, 120"
+                }
+              ]
             }
           ]
         }
@@ -149,18 +137,16 @@
       "owner": {
         "interface": 0
       },
-      "annotations": {
-        "contents": [
-          {
-            "label": "derive",
-            "value": "Debug, Clone"
-          },
-          {
-            "label": "validate_utf8",
-            "value": ""
-          }
-        ]
-      }
+      "annotations": [
+        {
+          "target": "derive",
+          "value": "Debug, Clone"
+        },
+        {
+          "target": "validate_utf8",
+          "value": ""
+        }
+      ]
     },
     {
       "name": "vector3",
@@ -170,38 +156,32 @@
             {
               "name": "x",
               "type": "f32",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "finite",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "finite",
+                  "value": ""
+                }
+              ]
             },
             {
               "name": "y",
               "type": "f32",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "finite",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "finite",
+                  "value": ""
+                }
+              ]
             },
             {
               "name": "z",
               "type": "f32",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "finite",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "finite",
+                  "value": ""
+                }
+              ]
             }
           ]
         }
@@ -209,22 +189,20 @@
       "owner": {
         "interface": 0
       },
-      "annotations": {
-        "contents": [
-          {
-            "label": "derive",
-            "value": "Debug, Copy, Clone"
-          },
-          {
-            "label": "repr",
-            "value": "C"
-          },
-          {
-            "label": "align",
-            "value": "16"
-          }
-        ]
-      }
+      "annotations": [
+        {
+          "target": "derive",
+          "value": "Debug, Copy, Clone"
+        },
+        {
+          "target": "repr",
+          "value": "C"
+        },
+        {
+          "target": "align",
+          "value": "16"
+        }
+      ]
     },
     {
       "name": "feature-flags",
@@ -233,36 +211,30 @@
           "flags": [
             {
               "name": "ai-mode",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "experimental",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "experimental",
+                  "value": ""
+                }
+              ]
             },
             {
               "name": "legacy-api",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "deprecated",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "deprecated",
+                  "value": ""
+                }
+              ]
             },
             {
               "name": "core-features",
-              "annotations": {
-                "contents": [
-                  {
-                    "label": "stable",
-                    "value": ""
-                  }
-                ]
-              }
+              "annotations": [
+                {
+                  "target": "stable",
+                  "value": ""
+                }
+              ]
             }
           ]
         }
@@ -270,14 +242,12 @@
       "owner": {
         "interface": 0
       },
-      "annotations": {
-        "contents": [
-          {
-            "label": "derive",
-            "value": "Debug"
-          }
-        ]
-      }
+      "annotations": [
+        {
+          "target": "derive",
+          "value": "Debug"
+        }
+      ]
     },
     {
       "name": null,
