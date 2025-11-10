@@ -798,8 +798,8 @@ impl<'a> Resolver<'a> {
                 let name = format!("{prefix}{}", name.name);
                 let func = self.resolve_function(
                     docs,
-                    annotations,
                     attrs,
+                    annotations,
                     &name,
                     func,
                     if func.async_ {
@@ -859,8 +859,8 @@ impl<'a> Resolver<'a> {
                     let name = format!("{prefix}{}", f.name.name);
                     funcs.push(self.resolve_function(
                         &f.docs,
-                        &f.annotations,
                         &f.attributes,
+                        &f.annotations,
                         &name,
                         &f.func,
                         if f.func.async_ {
@@ -1091,8 +1091,8 @@ impl<'a> Resolver<'a> {
         }
         self.resolve_function(
             &named_func.docs,
-            &named_func.annotations,
             &named_func.attributes,
+            &named_func.annotations,
             &name,
             &named_func.func,
             kind,
@@ -1102,8 +1102,8 @@ impl<'a> Resolver<'a> {
     fn resolve_function(
         &mut self,
         docs: &ast::Docs<'_>,
-        annotations: &ast::Annotations,
         attrs: &[ast::Attribute<'_>],
+        annotations: &ast::Annotations,
         name: &str,
         func: &ast::Func,
         kind: FunctionKind,
@@ -1590,8 +1590,8 @@ impl<'a> Resolver<'a> {
             .annotations
             .iter()
             .map(|ann| Annotation {
-                label: ann.0.clone(),
-                value: ann.1.clone(),
+                label: ann.0.to_string(),
+                value: ann.1.to_string(),
             })
             .collect();
         Annotations { contents }

@@ -32,7 +32,7 @@ pub struct Span {
 pub enum Token {
     Whitespace,
     Comment,
-    Hashtag,
+    Hash,
 
     Equals,
     Comma,
@@ -223,7 +223,7 @@ impl<'a> Tokenizer<'a> {
                     Slash
                 }
             }
-            '#' => Hashtag,
+            '#' => Hash,
             '=' => Equals,
             ',' => Comma,
             ':' => Colon,
@@ -333,7 +333,7 @@ impl<'a> Tokenizer<'a> {
                 Integer
             }
 
-            _ => return Err(Error::Unexpected(start, ch)),
+            ch => return Err(Error::Unexpected(start, ch)),
         };
         let end = match self.chars.clone().next() {
             Some((i, _)) => i,
@@ -520,7 +520,7 @@ impl Token {
         match self {
             Whitespace => "whitespace",
             Comment => "a comment",
-            Hashtag => "a hashtag",
+            Hash => "a hash",
             Equals => "'='",
             Comma => "','",
             Colon => "':'",

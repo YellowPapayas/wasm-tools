@@ -277,7 +277,7 @@ impl<'a> AstItem<'a> {
 #[derive(Debug, Clone)]
 struct PackageName<'a> {
     docs: Docs<'a>,
-    annotations: Annotations,
+    annotations: Annotations<'a>,
     span: Span,
     namespace: Id<'a>,
     name: Id<'a>,
@@ -285,7 +285,11 @@ struct PackageName<'a> {
 }
 
 impl<'a> PackageName<'a> {
-    fn parse(tokens: &mut Tokenizer<'a>, docs: Docs<'a>, annotations: Annotations) -> Result<Self> {
+    fn parse(
+        tokens: &mut Tokenizer<'a>,
+        docs: Docs<'a>,
+        annotations: Annotations<'a>,
+    ) -> Result<Self> {
         let namespace = parse_id(tokens)?;
         tokens.expect(Token::Colon)?;
         let name = parse_id(tokens)?;
@@ -344,7 +348,7 @@ impl<'a> ToplevelUse<'a> {
 struct World<'a> {
     docs: Docs<'a>,
     attributes: Vec<Attribute<'a>>,
-    annotations: Annotations,
+    annotations: Annotations<'a>,
     name: Id<'a>,
     items: Vec<WorldItem<'a>>,
 }
@@ -354,7 +358,7 @@ impl<'a> World<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<Self> {
         tokens.expect(Token::World)?;
         let name = parse_id(tokens)?;
@@ -397,7 +401,7 @@ impl<'a> WorldItem<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<WorldItem<'a>> {
         match tokens.clone().next()? {
             Some((_span, Token::Import)) => {
@@ -443,7 +447,7 @@ impl<'a> WorldItem<'a> {
 struct Import<'a> {
     docs: Docs<'a>,
     attributes: Vec<Attribute<'a>>,
-    annotations: Annotations,
+    annotations: Annotations<'a>,
     kind: ExternKind<'a>,
 }
 
@@ -452,7 +456,7 @@ impl<'a> Import<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<Import<'a>> {
         tokens.expect(Token::Import)?;
         let kind = ExternKind::parse(tokens)?;
@@ -468,7 +472,7 @@ impl<'a> Import<'a> {
 struct Export<'a> {
     docs: Docs<'a>,
     attributes: Vec<Attribute<'a>>,
-    annotations: Annotations,
+    annotations: Annotations<'a>,
     kind: ExternKind<'a>,
 }
 
@@ -477,7 +481,7 @@ impl<'a> Export<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<Export<'a>> {
         tokens.expect(Token::Export)?;
         let kind = ExternKind::parse(tokens)?;
@@ -545,7 +549,7 @@ impl<'a> ExternKind<'a> {
 struct Interface<'a> {
     docs: Docs<'a>,
     attributes: Vec<Attribute<'a>>,
-    annotations: Annotations,
+    annotations: Annotations<'a>,
     name: Id<'a>,
     items: Vec<InterfaceItem<'a>>,
 }
@@ -555,7 +559,7 @@ impl<'a> Interface<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<Self> {
         tokens.expect(Token::Interface)?;
         let name = parse_id(tokens)?;
@@ -600,7 +604,7 @@ enum InterfaceItem<'a> {
 
 struct Use<'a> {
     attributes: Vec<Attribute<'a>>,
-    annotations: Annotations,
+    annotations: Annotations<'a>,
     from: UsePath<'a>,
     names: Vec<UseName<'a>>,
 }
@@ -658,7 +662,7 @@ impl<'a> Use<'a> {
     fn parse(
         tokens: &mut Tokenizer<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<Self> {
         tokens.expect(Token::Use)?;
         let from = UsePath::parse(tokens)?;
@@ -762,12 +766,12 @@ impl<'a> Default for Docs<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub struct Annotations {
-    annotations: Vec<(String, String)>,
+pub struct Annotations<'a> {
+    annotations: Vec<(&'a str, &'a str)>,
     span: Span,
 }
 
-impl Default for Annotations {
+impl<'a> Default for Annotations<'a> {
     fn default() -> Self {
         Self {
             annotations: Default::default(),
@@ -776,20 +780,21 @@ impl Default for Annotations {
     }
 }
 
-impl<'a> Annotations {
-    fn parse_annotations(tokens: &mut Tokenizer<'a>) -> Result<Annotations> {
+impl<'a> Annotations<'a> {
+    fn parse_annotations(tokens: &mut Tokenizer<'a>) -> Result<Annotations<'a>> {
         let mut annotations = Annotations::default();
         let mut started = false;
-        while tokens.eat(Token::Hashtag)? {
+        while tokens.eat(Token::Hash)? {
             let id_span = tokens.expect(Token::Id)?;
             if !started {
                 annotations.span.start = id_span.start - 1;
                 started = true;
             }
             let label = tokens.get_span(id_span);
-            let (value, value_span) = parse_parantheses(tokens)?;
+            let (value, value_span) = parse_parentheses(tokens)?;
+            let trimmed_value = value.trim_start_matches('(').trim_end_matches(')');
             annotations.span.end = value_span.end;
-            annotations.annotations.push((label.to_string(), value));
+            annotations.annotations.push((label, trimmed_value));
         }
         Ok(annotations)
     }
@@ -798,7 +803,7 @@ impl<'a> Annotations {
 struct TypeDef<'a> {
     docs: Docs<'a>,
     attributes: Vec<Attribute<'a>>,
-    annotations: Annotations,
+    annotations: Annotations<'a>,
     name: Id<'a>,
     ty: Type<'a>,
 }
@@ -862,7 +867,7 @@ impl<'a> ResourceFunc<'a> {
     fn parse(
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
         tokens: &mut Tokenizer<'a>,
     ) -> Result<Self> {
         match tokens.clone().next()? {
@@ -939,7 +944,7 @@ struct Record<'a> {
 
 struct Field<'a> {
     docs: Docs<'a>,
-    annotations: Annotations,
+    annotations: Annotations<'a>,
     name: Id<'a>,
     ty: Type<'a>,
 }
@@ -951,7 +956,7 @@ struct Flags<'a> {
 
 struct Flag<'a> {
     docs: Docs<'a>,
-    annotations: Annotations,
+    annotations: Annotations<'a>,
     name: Id<'a>,
 }
 
@@ -962,7 +967,7 @@ struct Variant<'a> {
 
 struct Case<'a> {
     docs: Docs<'a>,
-    annotations: Annotations,
+    annotations: Annotations<'a>,
     name: Id<'a>,
     ty: Option<Type<'a>>,
 }
@@ -974,7 +979,7 @@ struct Enum<'a> {
 
 struct EnumCase<'a> {
     docs: Docs<'a>,
-    annotations: Annotations,
+    annotations: Annotations<'a>,
     name: Id<'a>,
 }
 
@@ -1018,7 +1023,7 @@ struct Stream<'a> {
 struct NamedFunc<'a> {
     docs: Docs<'a>,
     attributes: Vec<Attribute<'a>>,
-    annotations: Annotations,
+    annotations: Annotations<'a>,
     name: Id<'a>,
     func: Func<'a>,
 }
@@ -1068,7 +1073,7 @@ impl<'a> InterfaceItem<'a> {
     fn parse(
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
         attributes: Vec<Attribute<'a>>,
     ) -> Result<InterfaceItem<'a>> {
         match tokens.clone().next()? {
@@ -1111,7 +1116,7 @@ impl<'a> TypeDef<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<Self> {
         tokens.expect(Token::Type)?;
         let name = parse_id(tokens)?;
@@ -1131,7 +1136,7 @@ impl<'a> TypeDef<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<Self> {
         tokens.expect(Token::Flags)?;
         let name = parse_id(tokens)?;
@@ -1164,7 +1169,7 @@ impl<'a> TypeDef<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<Self> {
         tokens.expect(Token::Resource)?;
         let name = parse_id(tokens)?;
@@ -1196,7 +1201,7 @@ impl<'a> TypeDef<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<Self> {
         tokens.expect(Token::Record)?;
         let name = parse_id(tokens)?;
@@ -1232,7 +1237,7 @@ impl<'a> TypeDef<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<Self> {
         tokens.expect(Token::Variant)?;
         let name = parse_id(tokens)?;
@@ -1273,7 +1278,7 @@ impl<'a> TypeDef<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<Self> {
         tokens.expect(Token::Enum)?;
         let name = parse_id(tokens)?;
@@ -1308,7 +1313,7 @@ impl<'a> NamedFunc<'a> {
         tokens: &mut Tokenizer<'a>,
         docs: Docs<'a>,
         attributes: Vec<Attribute<'a>>,
-        annotations: Annotations,
+        annotations: Annotations<'a>,
     ) -> Result<Self> {
         let name = parse_id(tokens)?;
         tokens.expect(Token::Colon)?;
@@ -1654,7 +1659,7 @@ fn parse_list<'a, T>(
     tokens: &mut Tokenizer<'a>,
     start: Token,
     end: Token,
-    parse: impl FnMut(Docs<'a>, Annotations, &mut Tokenizer<'a>) -> Result<T>,
+    parse: impl FnMut(Docs<'a>, Annotations<'a>, &mut Tokenizer<'a>) -> Result<T>,
 ) -> Result<Vec<T>> {
     tokens.expect(start)?;
     parse_list_trailer(tokens, end, parse)
@@ -1663,7 +1668,7 @@ fn parse_list<'a, T>(
 fn parse_list_trailer<'a, T>(
     tokens: &mut Tokenizer<'a>,
     end: Token,
-    mut parse: impl FnMut(Docs<'a>, Annotations, &mut Tokenizer<'a>) -> Result<T>,
+    mut parse: impl FnMut(Docs<'a>, Annotations<'a>, &mut Tokenizer<'a>) -> Result<T>,
 ) -> Result<Vec<T>> {
     let mut items = Vec::new();
     loop {
@@ -1689,8 +1694,8 @@ fn parse_list_trailer<'a, T>(
     Ok(items)
 }
 
-fn parse_parantheses<'a>(tokens: &mut Tokenizer<'a>) -> Result<(String, Span)> {
-    let mut output: String = "".to_string();
+fn parse_parentheses<'a>(tokens: &mut Tokenizer<'a>) -> Result<(&'a str, Span), lex::Error> {
+    let mut output: &'a str = "".into();
     let mut output_span: Span = Span { start: 0, end: 0 };
     let mut started = false;
     let mut depth = 0;
@@ -1712,35 +1717,31 @@ fn parse_parantheses<'a>(tokens: &mut Tokenizer<'a>) -> Result<(String, Span)> {
                             break;
                         } else {
                             depth = depth - 1;
-                            output.push(')');
                         }
                     }
                     Token::LeftParen => {
                         depth = depth + 1;
-                        output.push('(');
                     }
                     _ => {
                         let raw = tokens.get_span(span);
                         if raw.contains("\n") {
-                            break;
-                        } else {
-                            output = output + raw;
+                            return Err(lex::Error::UnterminatedComment(output_span.start));
                         }
                     }
                 }
             }
             Ok(None) => {
-                break;
+                return Err(lex::Error::UnterminatedComment(output_span.start));
             }
-            Err(lex::Error::Unexpected(_, ch)) => {
-                output.push(ch);
+            Err(lex::Error::Unexpected(..)) => {
                 output_span.end += 1;
             }
-            _ => {
-                break;
+            Err(error) => {
+                return Err(error);
             }
         }
     }
+    output = tokens.get_span(output_span);
     Ok((output, output_span))
 }
 
