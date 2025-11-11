@@ -15,6 +15,5 @@ doctest = false
 wit-bindgen = { workspace = true, optional = true, features = ['async'] }
 
 [features]
-default = []
-async-raw = []
-async-runtime = ['dep:wit-bindgen']
+default = ['async']
+async = ['dep:wit-bindgen']
