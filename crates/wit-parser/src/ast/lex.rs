@@ -349,38 +349,31 @@ impl<'a> Tokenizer<'a> {
         if !self.eat(Token::LeftParen)? {
             return Ok(None);
         }
-        let mut started = false;
-        let mut span: Span = Span { start: 0, end: 0 };
+        
+        let span_start = self.chars.chars.offset();
+        
         let mut depth = 0;
-
-        loop {
-            let (ch_index, ch) = match self.chars.next() {
-                Some(pair) => pair,
-                None => {
-                    return Err(Error::UnclosedParentheses(
-                        self.span_offset + u32::try_from(self.input.len()).unwrap(),
-                    ));
-                }
-            };
-
-            let current_pos = self.span_offset + u32::try_from(ch_index).unwrap();
-            if !started {
-                started = true;
-                span.start = current_pos;
-            }
-
+        
+        while let Some((ch_idx, ch)) = self.chars.next() {
             match ch {
                 '(' => depth += 1,
                 ')' => {
                     if depth == 0 {
-                        return Ok(Some(span));
+                        return Ok(Some(Span {
+                            start: span_start as u32,
+                            end: ch_idx as u32  // don't include the parenthesis in span
+                        }));
                     }
                     depth -= 1;
                 }
                 _ => {}
+                
             }
-            span.end = current_pos + ch.len_utf8() as u32;
         }
+        
+        Err(Error::UnclosedParentheses(
+            self.span_offset + u32::try_from(self.input.len()).unwrap(),
+        ))
     }
 
     pub fn eat(&mut self, expected: Token) -> Result<bool, Error> {

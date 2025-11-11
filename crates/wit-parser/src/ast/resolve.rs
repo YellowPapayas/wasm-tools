@@ -1,4 +1,5 @@
 use super::{ParamList, WorldOrInterface};
+use crate::ast::Annotation;
 use crate::ast::toposort::toposort;
 use crate::*;
 use anyhow::bail;
@@ -1581,13 +1582,12 @@ impl<'a> Resolver<'a> {
         Docs { contents }
     }
 
-    fn annotations(&mut self, annotations: &[super::Annotation]) -> Annotations {
-        let mut ann: Annotations = Annotations { contents: vec![] };
+    fn annotations(&mut self, annotations: &[Annotation]) -> Annotations {
+        let mut annos: Annotations = Annotations::new();
         for annotation in annotations {
-            ann.contents
-                .push((annotation.target.to_string(), annotation.value.to_string()));
+            annos.push((annotation.target.to_string(), annotation.value.to_string()));
         }
-        ann
+        annos
     }
 
     fn stability(&mut self, attrs: &[ast::Attribute<'_>]) -> Result<Stability> {

@@ -778,24 +778,20 @@ impl<'a> Annotation<'a> {
     fn parse_annotations(tokens: &mut Tokenizer<'a>) -> Result<Vec<Annotation<'a>>> {
         let mut output: Vec<Annotation<'a>> = vec![];
         while tokens.eat(Token::Hash)? {
-            let id_span = tokens.expect(Token::Id)?;
-            let mut span_end = id_span.end;
-            let target = tokens.get_span(id_span);
+            let target_span = tokens.expect(Token::Id)?;
+            let target = tokens.get_span(target_span);
+            
             let value_span = tokens.parse_parentheses()?;
-            let value = match value_span {
-                Some(span) => {
-                    span_end = span.end;
-                    tokens.get_span(span)
-                }
-                None => "".trim(),
+            
+            let (value, span) = match value_span {
+                Some(span) => (tokens.get_span(span), Span {start: target_span.start, end: span.end}),
+                None => ("", target_span)
             };
+            
             output.push(Annotation {
                 target,
                 value,
-                span: Span {
-                    start: id_span.start,
-                    end: span_end,
-                },
+                span
             });
         }
         Ok(output)

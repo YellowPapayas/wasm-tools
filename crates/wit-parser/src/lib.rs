@@ -891,17 +891,7 @@ impl Docs {
     }
 }
 
-#[derive(Clone, Default, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
-pub struct Annotations {
-    pub contents: Vec<(String, String)>,
-}
-
-impl Annotations {
-    pub fn is_empty(&self) -> bool {
-        self.contents.is_empty()
-    }
-}
+pub type Annotations = Vec<(String, String)>;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
