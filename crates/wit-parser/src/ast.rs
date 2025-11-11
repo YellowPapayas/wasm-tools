@@ -777,6 +777,7 @@ impl<'a> Default for Annotation<'a> {
 impl<'a> Annotation<'a> {
     fn parse_annotations(tokens: &mut Tokenizer<'a>) -> Result<Vec<Annotation<'a>>> {
         let mut output: Vec<Annotation<'a>> = vec![];
+        
         while tokens.eat(Token::Hash)? {
             let target_span = tokens.expect(Token::Id)?;
             let target = tokens.get_span(target_span);

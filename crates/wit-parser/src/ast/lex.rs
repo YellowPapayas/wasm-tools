@@ -361,18 +361,17 @@ impl<'a> Tokenizer<'a> {
                     if depth == 0 {
                         return Ok(Some(Span {
                             start: span_start as u32,
-                            end: ch_idx as u32  // don't include the parenthesis in span
+                            end: ch_idx as u32
                         }));
                     }
                     depth -= 1;
                 }
                 _ => {}
-                
             }
         }
         
         Err(Error::UnclosedParentheses(
-            self.span_offset + u32::try_from(self.input.len()).unwrap(),
+            self.span_offset + self.input.len() as u32,
         ))
     }
 

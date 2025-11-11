@@ -1583,11 +1583,7 @@ impl<'a> Resolver<'a> {
     }
 
     fn annotations(&mut self, annotations: &[Annotation]) -> Annotations {
-        let mut annos: Annotations = Annotations::new();
-        for annotation in annotations {
-            annos.push((annotation.target.to_string(), annotation.value.to_string()));
-        }
-        annos
+        annotations.iter().map(|anno| (anno.target.to_string(), anno.value.to_string())).collect()
     }
 
     fn stability(&mut self, attrs: &[ast::Attribute<'_>]) -> Result<Stability> {
