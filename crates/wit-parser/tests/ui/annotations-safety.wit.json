@@ -1,0 +1,440 @@
+{
+  "worlds": [],
+  "interfaces": [
+    {
+      "name": "safety-examples",
+      "types": {
+        "safe-path": 0,
+        "credentials": 1,
+        "secure-connection": 2,
+        "access-level": 3
+      },
+      "functions": {
+        "[constructor]secure-connection": {
+          "name": "[constructor]secure-connection",
+          "kind": {
+            "constructor": 2
+          },
+          "params": [
+            {
+              "name": "host",
+              "type": "string"
+            },
+            {
+              "name": "port",
+              "type": "u16"
+            }
+          ],
+          "result": 7,
+          "annotations": {
+            "contents": [
+              [
+                "validate_host",
+                ""
+              ],
+              [
+                "require_tls",
+                ""
+              ]
+            ]
+          }
+        },
+        "[method]secure-connection.send-encrypted": {
+          "name": "[method]secure-connection.send-encrypted",
+          "kind": {
+            "method": 2
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 4
+            },
+            {
+              "name": "payload",
+              "type": 5
+            }
+          ],
+          "result": "bool",
+          "annotations": {
+            "contents": [
+              [
+                "encrypt",
+                "algorithm = \"aes-256-gcm\""
+              ],
+              [
+                "non_null",
+                "payload"
+              ],
+              [
+                "max_size",
+                "payload, 65536"
+              ]
+            ]
+          }
+        },
+        "[method]secure-connection.receive-encrypted": {
+          "name": "[method]secure-connection.receive-encrypted",
+          "kind": {
+            "method": 2
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 4
+            }
+          ],
+          "result": 6,
+          "annotations": {
+            "contents": [
+              [
+                "decrypt",
+                ""
+              ],
+              [
+                "verify_signature",
+                ""
+              ]
+            ]
+          }
+        },
+        "[method]secure-connection.disconnect": {
+          "name": "[method]secure-connection.disconnect",
+          "kind": {
+            "method": 2
+          },
+          "params": [
+            {
+              "name": "self",
+              "type": 4
+            }
+          ],
+          "annotations": {
+            "contents": [
+              [
+                "audit_log",
+                ""
+              ],
+              [
+                "inject_after",
+                "\"security::log_disconnect(&self.host);\""
+              ]
+            ]
+          }
+        },
+        "delete-user": {
+          "name": "delete-user",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "user-id",
+              "type": "u64"
+            }
+          ],
+          "result": "bool",
+          "annotations": {
+            "contents": [
+              [
+                "authorize",
+                "level = \"admin\""
+              ],
+              [
+                "audit_log",
+                ""
+              ],
+              [
+                "rate_limit",
+                "10, per_minute"
+              ]
+            ]
+          }
+        },
+        "render-user-content": {
+          "name": "render-user-content",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "input",
+              "type": "string"
+            }
+          ],
+          "result": "string",
+          "annotations": {
+            "contents": [
+              [
+                "escape_html",
+                ""
+              ],
+              [
+                "sanitize",
+                "mode = \"html\""
+              ],
+              [
+                "max_length",
+                "input, 10000"
+              ]
+            ]
+          }
+        },
+        "compare-secrets": {
+          "name": "compare-secrets",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "a",
+              "type": "string"
+            },
+            {
+              "name": "b",
+              "type": "string"
+            }
+          ],
+          "result": "bool",
+          "annotations": {
+            "contents": [
+              [
+                "constant_time",
+                ""
+              ],
+              [
+                "no_short_circuit",
+                ""
+              ]
+            ]
+          }
+        },
+        "get-random-number": {
+          "name": "get-random-number",
+          "kind": "freestanding",
+          "params": [],
+          "result": "u32",
+          "annotations": {
+            "contents": [
+              [
+                "test_only",
+                ""
+              ],
+              [
+                "mock_return",
+                "42"
+              ]
+            ]
+          }
+        }
+      },
+      "docs": {
+        "contents": "Security & safety:\n    - #sanitize, #validate_on_construct, #no_path_traversal for input sanitization\n    - #zeroize_on_drop, #sensitive for secure data handling\n    - #encrypt, #decrypt, #verify_signature for cryptography\n    - #audit_log, #authorize, #constant_time for security operations\n    - #test_only, #mock_return for testing"
+      },
+      "package": 0
+    }
+  ],
+  "types": [
+    {
+      "name": "safe-path",
+      "kind": {
+        "record": {
+          "fields": [
+            {
+              "name": "path",
+              "type": "string",
+              "annotations": {
+                "contents": [
+                  [
+                    "sanitize",
+                    "mode = \"path\""
+                  ],
+                  [
+                    "no_path_traversal",
+                    ""
+                  ],
+                  [
+                    "max_length",
+                    "4096"
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug"
+          ],
+          [
+            "validate_on_construct",
+            ""
+          ]
+        ]
+      }
+    },
+    {
+      "name": "credentials",
+      "kind": {
+        "record": {
+          "fields": [
+            {
+              "name": "token",
+              "type": "string",
+              "annotations": {
+                "contents": [
+                  [
+                    "non_empty",
+                    ""
+                  ],
+                  [
+                    "validate_base64",
+                    ""
+                  ]
+                ]
+              }
+            },
+            {
+              "name": "expires-in",
+              "type": "u32",
+              "annotations": {
+                "contents": [
+                  [
+                    "range",
+                    "1, 3600"
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug, Clone"
+          ],
+          [
+            "zeroize_on_drop",
+            ""
+          ],
+          [
+            "sensitive",
+            ""
+          ]
+        ]
+      }
+    },
+    {
+      "name": "secure-connection",
+      "kind": "resource",
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "access-level",
+      "kind": {
+        "enum": {
+          "cases": [
+            {
+              "name": "guest",
+              "annotations": {
+                "contents": [
+                  [
+                    "min_privilege",
+                    ""
+                  ]
+                ]
+              }
+            },
+            {
+              "name": "user"
+            },
+            {
+              "name": "admin"
+            },
+            {
+              "name": "super-admin",
+              "annotations": {
+                "contents": [
+                  [
+                    "require_mfa",
+                    ""
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug, Copy, Clone"
+          ],
+          [
+            "repr",
+            "u8"
+          ]
+        ]
+      }
+    },
+    {
+      "name": null,
+      "kind": {
+        "handle": {
+          "borrow": 2
+        }
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "list": "u8"
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "option": 5
+      },
+      "owner": null
+    },
+    {
+      "name": null,
+      "kind": {
+        "handle": {
+          "own": 2
+        }
+      },
+      "owner": null
+    }
+  ],
+  "packages": [
+    {
+      "name": "test:annotations-safety",
+      "interfaces": {
+        "safety-examples": 0
+      },
+      "worlds": {}
+    }
+  ]
+}

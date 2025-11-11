@@ -556,6 +556,7 @@ mod test {
             kind: TypeDefKind::Resource,
             owner: crate::TypeOwner::None,
             docs: Default::default(),
+            annotations: Default::default(),
             stability: Default::default(),
         });
         assert_eq!(elem.size, ArchitectureSize::new(usize::MAX, 0));
@@ -576,6 +577,7 @@ mod test {
             kind: TypeDefKind::Tuple(tuple),
             owner: crate::TypeOwner::None,
             docs: Default::default(),
+            annotations: Default::default(),
             stability: Default::default(),
         });
         obj.fill(&resolve);
@@ -588,6 +590,7 @@ mod test {
             kind: TypeDefKind::Result(my_result),
             owner: crate::TypeOwner::None,
             docs: Default::default(),
+            annotations: Default::default(),
             stability: Default::default(),
         });
         assert_eq!(elem.size, ArchitectureSize::new(8, 2));
@@ -602,11 +605,13 @@ mod test {
                     name: String::new(),
                     ty: Type::String,
                     docs: Default::default(),
+                    annotations: Default::default(),
                 },
                 crate::Field {
                     name: String::new(),
                     ty: Type::U64,
                     docs: Default::default(),
+                    annotations: Default::default(),
                 },
             ],
         };
@@ -615,6 +620,7 @@ mod test {
             kind: TypeDefKind::Record(my_record),
             owner: crate::TypeOwner::None,
             docs: Default::default(),
+            annotations: Default::default(),
             stability: Default::default(),
         });
         assert_eq!(elem.size, ArchitectureSize::new(8, 2));

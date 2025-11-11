@@ -413,6 +413,13 @@ pub struct World {
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
 
+    /// Annotations associated with this world declaration.
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
+
     /// Stability annotation for this world itself.
     #[cfg_attr(
         feature = "serde",
@@ -583,6 +590,13 @@ pub struct Interface {
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
 
+    /// Annotations associated with this interface.
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
+
     /// Stability attribute for this interface.
     #[cfg_attr(
         feature = "serde",
@@ -609,6 +623,11 @@ pub struct TypeDef {
         serde(skip_serializing_if = "Stability::is_unknown")
     )]
     pub stability: Stability,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
@@ -730,6 +749,11 @@ pub struct Field {
     pub ty: Type,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
@@ -744,6 +768,11 @@ pub struct Flag {
     pub name: String,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -794,6 +823,11 @@ pub struct Case {
     pub ty: Option<Type>,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 impl Variant {
@@ -814,6 +848,11 @@ pub struct EnumCase {
     pub name: String,
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Docs::is_empty"))]
     pub docs: Docs,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 impl Enum {
@@ -852,6 +891,8 @@ impl Docs {
     }
 }
 
+pub type Annotations = Vec<(String, String)>;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Function {
@@ -869,6 +910,11 @@ pub struct Function {
         serde(skip_serializing_if = "Stability::is_unknown")
     )]
     pub stability: Stability,
+    #[cfg_attr(
+        feature = "serde",
+        serde(skip_serializing_if = "Annotations::is_empty")
+    )]
+    pub annotations: Annotations,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1392,6 +1438,7 @@ mod test {
             owner: TypeOwner::None,
             docs: Docs::default(),
             stability: Stability::Unknown,
+            annotations: Default::default(),
         });
         let t1 = resolve.types.alloc(TypeDef {
             name: None,
@@ -1399,6 +1446,7 @@ mod test {
             owner: TypeOwner::None,
             docs: Docs::default(),
             stability: Stability::Unknown,
+            annotations: Default::default(),
         });
         let t2 = resolve.types.alloc(TypeDef {
             name: None,
@@ -1406,6 +1454,7 @@ mod test {
             owner: TypeOwner::None,
             docs: Docs::default(),
             stability: Stability::Unknown,
+            annotations: Default::default(),
         });
         let found = Function {
             name: "foo".into(),
@@ -1414,6 +1463,7 @@ mod test {
             result: Some(Type::Id(t2)),
             docs: Docs::default(),
             stability: Stability::Unknown,
+            annotations: Default::default(),
         }
         .find_futures_and_streams(&resolve);
         assert_eq!(3, found.len());

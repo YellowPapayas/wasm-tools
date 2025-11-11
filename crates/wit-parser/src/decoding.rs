@@ -310,6 +310,7 @@ impl ComponentInfo {
             includes: Default::default(),
             include_names: Default::default(),
             stability: Default::default(),
+            annotations: Default::default(),
         });
         let mut package = Package {
             // Similar to `world_name` above this is arbitrarily chosen as it's
@@ -899,6 +900,7 @@ impl WitPackageDecoder<'_> {
                     functions: IndexMap::new(),
                     package: None,
                     stability: Default::default(),
+                    annotations: Default::default(),
                 })
             });
 
@@ -954,6 +956,7 @@ impl WitPackageDecoder<'_> {
             functions: IndexMap::new(),
             package: None,
             stability: Default::default(),
+            annotations: Default::default(),
         };
 
         let owner = TypeOwner::Interface(self.resolve.interfaces.next_id());
@@ -1049,6 +1052,7 @@ impl WitPackageDecoder<'_> {
             kind,
             docs: Default::default(),
             stability: Default::default(),
+            annotations: Default::default(),
             owner,
         });
 
@@ -1087,6 +1091,7 @@ impl WitPackageDecoder<'_> {
             include_names: Default::default(),
             package: None,
             stability: Default::default(),
+            annotations: Default::default(),
         };
 
         let owner = TypeOwner::World(self.resolve.worlds.next_id());
@@ -1197,6 +1202,7 @@ impl WitPackageDecoder<'_> {
         Ok(Function {
             docs: Default::default(),
             stability: Default::default(),
+            annotations: Default::default(),
             kind: match name.kind() {
                 ComponentNameKind::Label(_) => FunctionKind::Freestanding,
                 ComponentNameKind::AsyncLabel(_) => FunctionKind::AsyncFreestanding,
@@ -1275,6 +1281,7 @@ impl WitPackageDecoder<'_> {
             name: None,
             docs: Default::default(),
             stability: Default::default(),
+            annotations: Default::default(),
             owner: TypeOwner::None,
             kind,
         });
@@ -1337,6 +1344,7 @@ impl WitPackageDecoder<'_> {
                                 format!("failed to convert record field '{name}'")
                             })?,
                             docs: Default::default(),
+                            annotations: Default::default(),
                         })
                     })
                     .collect::<Result<_>>()?;
@@ -1358,6 +1366,7 @@ impl WitPackageDecoder<'_> {
                                 None => None,
                             },
                             docs: Default::default(),
+                            annotations: Default::default(),
                         })
                     })
                     .collect::<Result<_>>()?;
@@ -1370,6 +1379,7 @@ impl WitPackageDecoder<'_> {
                     .map(|name| Flag {
                         name: name.to_string(),
                         docs: Default::default(),
+                        annotations: Default::default(),
                     })
                     .collect();
                 Ok(TypeDefKind::Flags(Flags { flags }))
@@ -1382,6 +1392,7 @@ impl WitPackageDecoder<'_> {
                     .map(|name| EnumCase {
                         name: name.into(),
                         docs: Default::default(),
+                        annotations: Default::default(),
                     })
                     .collect();
                 Ok(TypeDefKind::Enum(Enum { cases }))

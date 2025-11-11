@@ -1,0 +1,299 @@
+{
+  "worlds": [],
+  "interfaces": [
+    {
+      "name": "validation-examples",
+      "types": {
+        "sanitized-input": 0,
+        "vector3": 1,
+        "feature-flags": 2
+      },
+      "functions": {
+        "compute-hash": {
+          "name": "compute-hash",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "input",
+              "type": 0
+            }
+          ],
+          "result": "u64",
+          "annotations": {
+            "contents": [
+              [
+                "trace_calls",
+                ""
+              ],
+              [
+                "memoize",
+                ""
+              ],
+              [
+                "cache_result",
+                "ttl = 60"
+              ]
+            ]
+          }
+        },
+        "process-buffer": {
+          "name": "process-buffer",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "data",
+              "type": 3
+            }
+          ],
+          "result": "u32",
+          "annotations": {
+            "contents": [
+              [
+                "zero_copy",
+                ""
+              ],
+              [
+                "non_null",
+                "data"
+              ],
+              [
+                "min_length",
+                "data, 1"
+              ]
+            ]
+          }
+        },
+        "authenticate": {
+          "name": "authenticate",
+          "kind": "freestanding",
+          "params": [
+            {
+              "name": "username",
+              "type": "string"
+            },
+            {
+              "name": "password",
+              "type": "string"
+            }
+          ],
+          "result": "bool",
+          "annotations": {
+            "contents": [
+              [
+                "rate_limit",
+                "100, per_second"
+              ],
+              [
+                "log_params",
+                ""
+              ]
+            ]
+          }
+        }
+      },
+      "docs": {
+        "contents": "Validation & performance:\n    - #validate_utf8, #non_empty, #max_length, #email_format for input validation\n    - #range, #finite for numeric bounds\n    - #trace_calls, #memoize, #cache_result for performance monitoring\n    - #zero_copy, #rate_limit, #log_params for optimization and logging"
+      },
+      "package": 0
+    }
+  ],
+  "types": [
+    {
+      "name": "sanitized-input",
+      "kind": {
+        "record": {
+          "fields": [
+            {
+              "name": "username",
+              "type": "string",
+              "annotations": {
+                "contents": [
+                  [
+                    "non_empty",
+                    ""
+                  ],
+                  [
+                    "max_length",
+                    "255"
+                  ]
+                ]
+              }
+            },
+            {
+              "name": "email",
+              "type": "string",
+              "annotations": {
+                "contents": [
+                  [
+                    "email_format",
+                    ""
+                  ]
+                ]
+              }
+            },
+            {
+              "name": "age",
+              "type": "u8",
+              "annotations": {
+                "contents": [
+                  [
+                    "range",
+                    "18, 120"
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug, Clone"
+          ],
+          [
+            "validate_utf8",
+            ""
+          ]
+        ]
+      }
+    },
+    {
+      "name": "vector3",
+      "kind": {
+        "record": {
+          "fields": [
+            {
+              "name": "x",
+              "type": "f32",
+              "annotations": {
+                "contents": [
+                  [
+                    "finite",
+                    ""
+                  ]
+                ]
+              }
+            },
+            {
+              "name": "y",
+              "type": "f32",
+              "annotations": {
+                "contents": [
+                  [
+                    "finite",
+                    ""
+                  ]
+                ]
+              }
+            },
+            {
+              "name": "z",
+              "type": "f32",
+              "annotations": {
+                "contents": [
+                  [
+                    "finite",
+                    ""
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug, Copy, Clone"
+          ],
+          [
+            "repr",
+            "C"
+          ],
+          [
+            "align",
+            "16"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "feature-flags",
+      "kind": {
+        "flags": {
+          "flags": [
+            {
+              "name": "ai-mode",
+              "annotations": {
+                "contents": [
+                  [
+                    "experimental",
+                    ""
+                  ]
+                ]
+              }
+            },
+            {
+              "name": "legacy-api",
+              "annotations": {
+                "contents": [
+                  [
+                    "deprecated",
+                    ""
+                  ]
+                ]
+              }
+            },
+            {
+              "name": "core-features",
+              "annotations": {
+                "contents": [
+                  [
+                    "stable",
+                    ""
+                  ]
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "owner": {
+        "interface": 0
+      },
+      "annotations": {
+        "contents": [
+          [
+            "derive",
+            "Debug"
+          ]
+        ]
+      }
+    },
+    {
+      "name": null,
+      "kind": {
+        "list": "u8"
+      },
+      "owner": null
+    }
+  ],
+  "packages": [
+    {
+      "name": "test:annotations-derive",
+      "interfaces": {
+        "validation-examples": 0
+      },
+      "worlds": {}
+    }
+  ]
+}
